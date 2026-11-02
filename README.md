@@ -1,36 +1,69 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Nexora Data
 
-## Getting Started
+Situs profil dan katalog layanan Nexora Data: servis HP, laptop, dan PC di
+Pulo Gebang, Cakung, Jakarta Timur.
 
-First, run the development server:
+Dibangun dengan Next.js 16 (App Router), React 19, TypeScript, dan Tailwind CSS v4.
+
+## Menjalankan
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run dev      # http://localhost:3000
+npm run build    # build produksi
+npm run start    # jalankan hasil build
+npx eslint .     # cek gaya kode
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Struktur
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```
+app/
+  page.tsx              komposisi beranda
+  layanan/page.tsx      rincian layanan per perangkat
+  kontak/page.tsx       kontak, formulir, dan peta
+  layout.tsx            font, metadata, header/footer, JSON-LD bisnis
+  template.tsx          transisi antarhalaman
+  globals.css           token warna, tipografi, animasi
+components/
+  home/                 satu komponen per bagian beranda
+  ui/                   primitif bersama: Section, ButtonLink
+  estimate.tsx          kalkulator estimasi biaya (interaktif)
+  contact-form.tsx      formulir yang menyusun pesan WhatsApp
+  site-header.tsx       header tetap + menu seluler
+  site-footer.tsx       kontak, kredit foto, dan copyright
+  reveal.tsx            animasi muncul saat digulir
+lib/
+  site.ts               identitas bisnis, alamat, WhatsApp, peta
+  content.ts            daftar layanan, proses, estimasi harga, FAQ
+  media.ts              kredit foto dan foto suasana
+  structured-data.ts    JSON-LD LocalBusiness dan FAQPage
+  cn.ts                 penggabung className
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Mengubah konten
 
-## Learn More
+- **Harga dan daftar kerusakan** ada di `lib/content.ts`
+  (`estimates`, `priceRows`). Tabel desktop dan daftar seluler memakai data
+  yang sama.
+- **Alamat, jam buka, WhatsApp, Instagram** ada di `lib/site.ts`.
+- **Teks halaman** berada langsung di komponennya; bagian beranda ada di
+  `components/home/`.
+- **Foto** disimpan di `public/images/`. Ganti dengan foto asli toko, lalu
+  perbarui `lib/media.ts` dan kredit di footer.
 
-To learn more about Next.js, take a look at the following resources:
+## Yang perlu diganti sebelum publikasi
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. **Harga** di `lib/content.ts` masih berupa estimasi, bukan tarif resmi.
+2. **`site.url`** di `lib/site.ts` masih `https://nexoradata.id`; sesuaikan
+   dengan domain final agar metadata dan sitemap benar.
+3. **Tahun copyright** di `components/site-footer.tsx` masih `2026`
+   (dibuat statis karena `cacheComponents` melarang `new Date()` saat
+   prerender).
+4. **`claimsPlaceholder`** di `lib/content.ts` sengaja tidak dirender.
+   Isi dengan angka yang benar-benar bisa dibuktikan sebelum dipakai.
+5. **Foto** saat ini berasal dari Wikimedia Commons (berlisensi terbuka) dan
+   hanya menggambarkan suasana servis, bukan toko Nexora Data. Ganti dengan
+   foto asli.
+6. **Koordinat peta** di `lib/structured-data.ts` masih perkiraan area Pulo
+   Gebang; sesuaikan dengan titik toko yang tepat.
