@@ -10,6 +10,8 @@ import { ShinyLink } from "@/components/ui/shiny-link";
 import { atmospherePhotos } from "@/lib/media";
 import { site, waDefault } from "@/lib/site";
 
+import { WELCOME_COOKIE, WELCOME_MAX_AGE } from "@/lib/welcome";
+
 const WORD = "NEXORA";
 
 /** Sora, the site's display face, resolved through the Tailwind theme token. */
@@ -109,6 +111,12 @@ export function WelcomePortal() {
   const face = useDisplayFace();
   const frame = useRef<HTMLDivElement>(null);
   const photo = atmospherePhotos.board;
+  
+    // Dibuka langsung lewat /selamat-datang pun dihitung sudah disambut,
+  // supaya "/" tidak mengembalikan pengunjung ke sini sekali lagi.
+  useEffect(() => {
+    document.cookie = `${WELCOME_COOKIE}=1; max-age=${WELCOME_MAX_AGE}; path=/; samesite=lax`;
+  }, []);
 
   // The fixed header reads data-chapter: paper while the word is on paper,
   // navy once the camera has gone through into the blue field.

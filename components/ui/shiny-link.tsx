@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { ShinySurface } from "@/components/ui/shiny-surface";
 import { cn } from "@/lib/cn";
 
 type ShinyLinkProps = {
@@ -15,17 +16,11 @@ type ShinyLinkProps = {
   cursor?: string;
 };
 
-const sizeClass = {
-  md: "px-6 py-3.5 text-[15px]",
-  lg: "px-7 py-4 text-[15px]",
-  none: "",
-} as const;
-
 /**
  * The bright call to action. A bar rotates behind a solid face, so only a
  * travelling rim of light shows, and a blurred sweep crosses the face on
- * hover or keyboard focus. Both effects are solid shapes and blur: no
- * gradient, no shadow, and both stop under prefers-reduced-motion.
+ * hover or keyboard focus. No gradient, no shadow; both stop under
+ * prefers-reduced-motion.
  */
 export function ShinyLink({
   href,
@@ -44,23 +39,13 @@ export function ShinyLink({
   );
 
   const content = (
-    <>
-      <span aria-hidden="true" className="shiny-rim" />
-
-      <span className={cn("shiny-face", sizeClass[size], faceClassName)}>
-        <span aria-hidden="true" className="shiny-glow" />
-        <span aria-hidden="true" className="shiny-sheen" />
-
-        <span
-          className={cn(
-            "relative z-10 inline-flex items-center gap-2 font-semibold",
-            labelClassName,
-          )}
-        >
-          {children}
-        </span>
-      </span>
-    </>
+    <ShinySurface
+      size={size}
+      faceClassName={faceClassName}
+      labelClassName={labelClassName}
+    >
+      {children}
+    </ShinySurface>
   );
 
   const shared = {

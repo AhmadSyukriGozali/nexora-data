@@ -94,7 +94,7 @@ export const estimates: Record<DeviceKey, DeviceEstimates> = {
     items: [
       {
         issue: "Layar pecah atau blank",
-        price: "Rp350 rb – Rp1,2 jt",
+        price: "Rp200 rb – Rp1,2 jt",
         detail: "Tergantung tipe panel dan apakah touchscreen ikut diganti.",
       },
       {
