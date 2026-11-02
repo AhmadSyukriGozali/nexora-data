@@ -7,6 +7,7 @@ import { Hero } from "@/components/home/hero";
 import { PhotoBand } from "@/components/home/photo-band";
 import { Pricing } from "@/components/home/pricing";
 import { Process } from "@/components/home/process";
+import { Ticker } from "@/components/home/ticker";
 import { OurPromise } from "@/components/home/our-promise";
 import { Quote } from "@/components/home/quote";
 import { faqs } from "@/lib/content";
@@ -24,11 +25,13 @@ export default function Home() {
       />
 
       <Hero />
+      <Ticker />
       <Capabilities />
       <Process />
 
       <PhotoBand
         photo={atmospherePhotos.bench}
+        overlay="Dibongkar"
         className="h-[46svh] min-h-[280px] md:h-[62svh]"
       />
 

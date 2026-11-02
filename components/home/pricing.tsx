@@ -1,23 +1,51 @@
+"use client";
+
+import {
+  motion,
+  useMotionValue,
+  useSpring,
+} from "motion/react";
+import { useRef, useState } from "react";
+import type { PointerEvent as ReactPointerEvent } from "react";
 import { Reveal } from "@/components/reveal";
 import { Section } from "@/components/ui/section";
-import { deviceOrder, estimates, priceRows } from "@/lib/content";
+import { deviceOrder, estimates, priceRows, type DeviceKey } from "@/lib/content";
+import { cn } from "@/lib/cn";
+import { ease } from "@/lib/motion";
 
 /**
- * One table on desktop, one stacked list per device on smaller screens.
+ * One table on desktop, one folding list per device on smaller screens.
  * Both render the same `priceRows`, so prices are edited in one place.
  */
 export function Pricing() {
+  const tableRef = useRef<HTMLDivElement>(null);
+  const [hovering, setHovering] = useState(false);
+  const [open, setOpen] = useState<DeviceKey | null>("hp");
+
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+  const glowX = useSpring(x, { stiffness: 160, damping: 22, mass: 0.4 });
+  const glowY = useSpring(y, { stiffness: 160, damping: 22, mass: 0.4 });
+
+  function trackPointer(event: ReactPointerEvent<HTMLDivElement>) {
+    if (event.pointerType !== "mouse") return;
+
+    const rect = event.currentTarget.getBoundingClientRect();
+    x.set(event.clientX - rect.left);
+    y.set(event.clientY - rect.top);
+  }
+
   return (
     <Section id="tarif" tone="navy" className="scroll-mt-20 section-pad">
       <div className="container-page">
         <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
-          <Reveal>
+          <Reveal variant="mask">
             <h2 className="display-lg text-[clamp(2.1rem,4.6vw,4rem)] text-chrome">
               Daftar tarif
             </h2>
           </Reveal>
 
-          <Reveal delay={80}>
+          <Reveal delay={80} variant="right">
             <p className="max-w-[40ch] text-[15px] leading-relaxed text-dim">
               Rentang harga jasa dan part yang paling sering diminta, dalam
               Rupiah. Semua angka dikonfirmasi setelah diagnosa gratis.
@@ -25,8 +53,22 @@ export function Pricing() {
           </Reveal>
         </div>
 
-        <Reveal className="mt-10 hidden lg:mt-12 lg:block">
-          <table className="price-table w-full border-collapse text-left">
+        <div
+          ref={tableRef}
+          onPointerMove={trackPointer}
+          onPointerEnter={() => setHovering(true)}
+          onPointerLeave={() => setHovering(false)}
+          className="relative mt-10 hidden lg:mt-12 lg:block"
+        >
+          <motion.div
+            aria-hidden="true"
+            style={{ x: glowX, y: glowY }}
+            animate={{ opacity: hovering ? 1 : 0 }}
+            transition={{ duration: 0.3 }}
+            className="pointer-events-none absolute left-0 top-0 h-64 w-64 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/10 blur-3xl"
+          />
+
+          <table className="price-table relative w-full border-collapse text-left">
             <caption className="sr-only">
               Estimasi tarif servis HP, laptop, dan PC di Nexora Data
             </caption>
@@ -52,9 +94,17 @@ export function Pricing() {
             </thead>
 
             <tbody>
-              {priceRows.map((row) => (
-                <tr
+              {priceRows.map((row, index) => (
+                <motion.tr
                   key={row.action}
+                  initial={{ opacity: 0, y: 16 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, amount: 0.5 }}
+                  transition={{
+                    duration: 0.5,
+                    ease: ease.out,
+                    delay: Math.min(index * 0.05, 0.3),
+                  }}
                   className="transition-colors hover:bg-white/[0.04]"
                 >
                   <th
@@ -71,32 +121,65 @@ export function Pricing() {
                       {row[device]}
                     </td>
                   ))}
-                </tr>
+                </motion.tr>
               ))}
             </tbody>
           </table>
-        </Reveal>
+        </div>
 
-        <div className="mt-8 space-y-8 lg:hidden">
-          {deviceOrder.map((device) => (
-            <div key={device}>
-              <h3 className="font-display text-[22px] font-semibold text-chrome">
-                {estimates[device].label}
-              </h3>
+        <div className="mt-8 space-y-3 lg:hidden">
+          {deviceOrder.map((device) => {
+            const isOpen = open === device;
 
-              <ul className="mt-3 space-y-1">
-                {priceRows.map((row) => (
-                  <li
-                    key={row.action}
-                    className="flex items-baseline justify-between gap-4 py-2.5 text-[15px]"
+            return (
+              <div key={device} className="bg-surface">
+                <button
+                  type="button"
+                  aria-expanded={isOpen}
+                  aria-controls={`tarif-${device}`}
+                  onClick={() => setOpen(isOpen ? null : device)}
+                  className="flex w-full items-center justify-between gap-4 px-5 py-5 text-left"
+                >
+                  <span className="font-display text-[21px] font-semibold text-chrome">
+                    {estimates[device].label}
+                  </span>
+                  <span
+                    aria-hidden="true"
+                    className={cn(
+                      "text-[22px] leading-none text-electric-soft transition-transform duration-300",
+                      isOpen && "rotate-45",
+                    )}
                   >
-                    <span className="text-chrome">{row.action}</span>
-                    <span className="tabular-nums text-dim">{row[device]}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
+                    +
+                  </span>
+                </button>
+
+                <div
+                  id={`tarif-${device}`}
+                  className={cn(
+                    "grid transition-[grid-template-rows] duration-[420ms] ease-out",
+                    isOpen ? "grid-rows-[1fr]" : "grid-rows-[0fr]",
+                  )}
+                >
+                  <div className="overflow-hidden">
+                    <ul className="px-5 pb-5">
+                      {priceRows.map((row) => (
+                        <li
+                          key={row.action}
+                          className="flex items-baseline justify-between gap-4 py-2.5 text-[15px]"
+                        >
+                          <span className="text-chrome">{row.action}</span>
+                          <span className="tabular-nums text-dim">
+                            {row[device]}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
     </Section>

@@ -12,9 +12,13 @@
   --color-electric-soft: #4f8bff;
   --color-chrome: #e8edf4;
   --color-dim: #93a1b5;
+  --color-live: #3ddc97;
 
   --font-display: var(--font-sora), "Segoe UI", system-ui, sans-serif;
   --font-sans: var(--font-jakarta), "Segoe UI", system-ui, sans-serif;
+
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-out-soft: cubic-bezier(0.22, 0.61, 0.36, 1);
 }
 
 @layer base {
@@ -28,6 +32,7 @@
     color: var(--color-chrome);
     font-family: var(--font-sans);
     text-rendering: optimizeLegibility;
+    overflow-x: clip;
   }
 
   ::selection {
@@ -95,7 +100,18 @@
     line-height: 1;
   }
 
-  /* Real table: row rules are the only hairlines allowed outside forms. */
+  /* Outline type: a second voice for the display scale, no fill involved. */
+  .type-outline {
+    color: transparent;
+    -webkit-text-stroke: 1.5px var(--color-chrome);
+  }
+
+  .type-outline-dark {
+    color: transparent;
+    -webkit-text-stroke: 1.5px var(--color-ink);
+  }
+
+  /* A real table: row rules are the only hairlines allowed outside forms. */
   .price-table tr {
     border-bottom: 1px solid rgb(255 255 255 / 0.1);
   }
@@ -105,18 +121,53 @@
   }
 }
 
+/*
+ * Fine film grain over the whole page. It is what stops flat colour fields
+ * from reading like empty divs; pointer events stay off so it never blocks.
+ */
+.grain {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  pointer-events: none;
+  opacity: 0.045;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
 /* Reveal on scroll. Content stays visible if JavaScript never runs. */
 html.js [data-reveal] {
   opacity: 0;
-  transform: translateY(22px);
+  transform: translateY(28px);
   transition:
-    opacity 700ms cubic-bezier(0.22, 0.61, 0.36, 1) var(--reveal-delay, 0ms),
-    transform 700ms cubic-bezier(0.22, 0.61, 0.36, 1) var(--reveal-delay, 0ms);
+    opacity 760ms var(--ease-out-expo) var(--reveal-delay, 0ms),
+    transform 760ms var(--ease-out-expo) var(--reveal-delay, 0ms);
+}
+
+html.js [data-reveal="left"] {
+  transform: translateX(-32px);
+}
+
+html.js [data-reveal="right"] {
+  transform: translateX(32px);
+}
+
+html.js [data-reveal="scale"] {
+  transform: translateY(16px) scale(0.965);
+}
+
+html.js [data-reveal="mask"] {
+  opacity: 1;
+  transform: translateY(14px);
+  clip-path: inset(0 0 100% 0);
+  transition:
+    clip-path 900ms var(--ease-out-expo) var(--reveal-delay, 0ms),
+    transform 900ms var(--ease-out-expo) var(--reveal-delay, 0ms);
 }
 
 html.js [data-reveal].is-in {
   opacity: 1;
   transform: none;
+  clip-path: inset(0 0 0 0);
 }
 
 @keyframes drift {
@@ -132,24 +183,169 @@ html.js [data-reveal].is-in {
   animation: drift 26s ease-in-out infinite alternate;
 }
 
-@keyframes hero-in {
-  from {
-    opacity: 0;
+@keyframes ticker {  from {
+    transform: translate3d(0, 0, 0);
   }
   to {
-    opacity: 1;
+    transform: translate3d(-50%, 0, 0);
   }
 }
 
-.hero-in {
-  animation: hero-in 900ms ease-out 120ms both;
+.ticker-track {
+  display: flex;
+  width: max-content;
+  animation: ticker 46s linear infinite;
+}
+
+.ticker:hover .ticker-track,
+.ticker:focus-within .ticker-track {
+  animation-play-state: paused;
+}
+
+@keyframes scroll-hint {
+  0% {
+    transform: translateY(-40%);
+    opacity: 0;
+  }
+  35% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(120%);
+    opacity: 0;
+  }
+}
+
+.scroll-hint::after {
+  content: "";
+  display: block;
+  width: 2px;
+  height: 26px;
+  background-color: currentColor;
+  animation: scroll-hint 1900ms ease-in-out infinite;
+}
+
+/* --- Shiny call to action ------------------------------------------------ */
+/*
+ * Light that travels along the edge, built from solid shapes and blur rather
+ * than gradients: a bar rotates behind the face, and only the 2px rim shows.
+ */
+
+.shiny {
+  position: relative;
+  display: inline-flex;
+  isolation: isolate;
+  overflow: hidden;
+  padding: 2px;
+  background-color: var(--shiny-rim-base, rgb(255 255 255 / 0.32));
+  transition: transform 220ms var(--ease-out-soft);
+}
+
+.shiny:active {
+  transform: translateY(1px);
+}
+
+.shiny-block {
+  display: flex;
+  width: 100%;
+}
+
+.shiny-chrome {
+  --shiny-face: var(--color-chrome);
+  --shiny-rim: var(--color-electric);
+  --shiny-glow: #ffffff;
+  --shiny-rim-base: rgb(30 94 255 / 0.38);
+}
+
+.shiny-electric {
+  --shiny-face: var(--color-electric);
+  --shiny-rim: var(--color-chrome);
+  --shiny-glow: #ffffff;
+  --shiny-rim-base: rgb(255 255 255 / 0.28);
+}
+
+.shiny-rim {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 0;
+  width: 220%;
+  height: 220%;
+  translate: -50% -50%;
+  background-color: var(--shiny-rim);
+  clip-path: polygon(46% 0, 54% 0, 54% 100%, 46% 100%);
+  animation: rim-spin 7s linear infinite;
+}
+
+.shiny-face {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  overflow: hidden;
+  background-color: var(--shiny-face);
+}
+
+.shiny-glow {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 70%;
+  height: 130%;
+  translate: -50% -50%;
+  background-color: var(--shiny-glow);
+  filter: blur(34px);
+  opacity: 0;
+  transition: opacity 400ms var(--ease-out-soft);
+}
+
+.shiny:hover .shiny-glow,
+.shiny:focus-visible .shiny-glow {
+  opacity: 0.28;
+}
+
+.shiny-sheen {
+  position: absolute;
+  top: -60%;
+  bottom: -60%;
+  left: -45%;
+  width: 42%;
+  background-color: #ffffff;
+  filter: blur(16px);
+  opacity: 0;
+  transform: translateX(-10%) skewX(-18deg);
+  pointer-events: none;
+}
+
+.shiny:hover .shiny-sheen,
+.shiny:focus-visible .shiny-sheen {
+  animation: sheen-sweep 900ms var(--ease-out-expo);
+}
+
+@keyframes rim-spin {
+  to {
+    rotate: 360deg;
+  }
+}
+
+@keyframes sheen-sweep {
+  0% {
+    opacity: 0;
+    transform: translateX(-10%) skewX(-18deg);
+  }
+  15% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(340%) skewX(-18deg);
+  }
 }
 
 /* Set by app/template.tsx on every route change. */
 @keyframes page-in {
   from {
     opacity: 0;
-    transform: translateY(8px);
+    transform: translateY(12px);
   }
   to {
     opacity: 1;
@@ -158,19 +354,43 @@ html.js [data-reveal].is-in {
 }
 
 .page-enter {
-  animation: page-in 420ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
+  animation: page-in 520ms var(--ease-out-expo) both;
 }
 
 @media (prefers-reduced-motion: reduce) {
   html.js [data-reveal] {
     opacity: 1;
     transform: none;
+    clip-path: none;
     transition: none;
   }
 
   .drift,
-  .hero-in,
+  .scroll-hint::after,
   .page-enter {
     animation: none;
+  }
+
+  .ticker-track {
+    animation: none;
+    width: auto;
+    flex-wrap: wrap;
+  }
+
+  .ticker-track [data-duplicate] {
+    display: none;
+  }
+
+  .shiny-rim {
+    animation: none;
+    opacity: 0.45;
+  }
+
+  .shiny-sheen {
+    display: none;
+  }
+
+  .shiny:active {
+    transform: none;
   }
 }

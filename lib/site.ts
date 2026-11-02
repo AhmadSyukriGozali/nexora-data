@@ -13,6 +13,11 @@ export const site = {
     intl: "628151616343",
   },
 
+  email: {
+    address: "Nexora.dat4@gmail.com",
+    url: "mailto:Nexora.dat4@gmail.com"
+  },
+
   instagram: {
     handle: "@nexora.data.official",
     url: "https://www.instagram.com/nexora.data.official",

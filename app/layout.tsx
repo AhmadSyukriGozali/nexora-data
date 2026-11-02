@@ -1,6 +1,9 @@
 import type { Metadata, Viewport } from "next";
 import { Plus_Jakarta_Sans, Sora } from "next/font/google";
 import "./globals.css";
+import { Cursor } from "@/components/motion/cursor";
+import { MotionProvider } from "@/components/motion/motion-provider";
+import { RouteWipe } from "@/components/motion/route-wipe";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { site } from "@/lib/site";
@@ -92,15 +95,20 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         />
       </head>
       <body className="min-h-full bg-navy text-chrome">
-        <a
-          href="#konten"
-          className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[80] focus:bg-electric focus:px-5 focus:py-3 focus:text-sm focus:font-semibold focus:text-white"
-        >
-          Lompat ke konten
-        </a>
-        <SiteHeader />
-        <main id="konten">{children}</main>
-        <SiteFooter />
+        <MotionProvider>
+          <a
+            href="#konten"
+            className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[80] focus:bg-electric focus:px-5 focus:py-3 focus:text-sm focus:font-semibold focus:text-white"
+          >
+            Lompat ke konten
+          </a>
+          <div aria-hidden="true" className="grain" />
+          <SiteHeader />
+          <main id="konten">{children}</main>
+          <SiteFooter />
+          <RouteWipe />
+          <Cursor />
+        </MotionProvider>
       </body>
     </html>
   );

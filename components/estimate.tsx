@@ -1,13 +1,18 @@
 "use client";
 
+import { AnimatePresence, motion } from "motion/react";
 import { useState } from "react";
+import { Magnetic } from "@/components/motion/magnetic";
 import { cn } from "@/lib/cn";
 import { deviceOrder, estimates, type DeviceKey } from "@/lib/content";
+import { ease, spring } from "@/lib/motion";
 import { waLink } from "@/lib/site";
 
 /**
  * Small interactive price range: pick a device, then the closest symptom.
  * The message sent to WhatsApp repeats both choices, so the admin has context.
+ * The moving pill and the swapped result make the tool feel like a control
+ * panel rather than a form.
  */
 export function Estimate() {
   const [device, setDevice] = useState<DeviceKey>("laptop");
@@ -39,13 +44,18 @@ export function Estimate() {
                 aria-pressed={active}
                 onClick={() => pickDevice(key)}
                 className={cn(
-                  "px-5 py-3 text-[15px] font-semibold transition-colors",
-                  active
-                    ? "bg-ink text-white"
-                    : "bg-paper-deep text-ink hover:bg-ink/10",
+                  "relative px-5 py-3 text-[15px] font-semibold transition-colors duration-200",
+                  active ? "text-white" : "text-ink hover:bg-ink/10",
                 )}
               >
-                {estimates[key].label}
+                {active ? (
+                  <motion.span
+                    layoutId="estimate-device"
+                    transition={spring.snappy}
+                    className="absolute inset-0 bg-ink"
+                  />
+                ) : null}
+                <span className="relative z-10">{estimates[key].label}</span>
               </button>
             );
           })}
@@ -60,14 +70,24 @@ export function Estimate() {
             const active = entryIndex === index;
 
             return (
-              <li key={entry.issue}>
+              <li key={entry.issue} className="relative">
+                {active ? (
+                  <motion.span
+                    layoutId="estimate-issue"
+                    transition={spring.snappy}
+                    className="absolute inset-0 bg-ink"
+                  />
+                ) : null}
+
                 <button
                   type="button"
                   aria-pressed={active}
                   onClick={() => setIndex(entryIndex)}
                   className={cn(
-                    "flex w-full items-baseline justify-between gap-6 px-4 py-3.5 text-left text-[16px] transition-colors",
-                    active ? "bg-ink text-white" : "text-ink hover:bg-paper-deep",
+                    "relative flex w-full items-baseline justify-between gap-6 px-4 py-3.5 text-left text-[16px] transition-colors duration-200",
+                    active
+                      ? "text-white"
+                      : "text-ink hover:bg-paper-deep",
                   )}
                 >
                   <span>{entry.issue}</span>
@@ -75,7 +95,7 @@ export function Estimate() {
                   <span
                     aria-hidden="true"
                     className={cn(
-                      "text-[13px]",
+                      "shrink-0 text-[13px]",
                       active ? "text-chrome" : "text-ink-soft",
                     )}
                   >
@@ -90,35 +110,52 @@ export function Estimate() {
 
       <div className="col-span-12 md:col-span-7">
         <div className="bg-navy p-7 text-chrome sm:p-10">
-          <p className="text-[14px] font-medium text-dim">
-            {data.full} · {item.issue}
-          </p>
+          <div className="flex flex-wrap items-baseline justify-between gap-3">
+            <p className="text-[14px] font-medium text-dim">Estimasi biaya</p>
+            <p className="text-[14px] text-dim">{data.full}</p>
+          </div>
 
-          <p
-            aria-live="polite"
-            className="display-lg mt-6 text-[clamp(2.2rem,4.6vw,3.9rem)] tabular-nums text-white"
-          >
-            {item.price}
-          </p>
+          <div aria-live="polite" className="min-h-[232px]">
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.div
+                key={`${device}-${index}`}
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -12 }}
+                transition={{ duration: 0.3, ease: ease.out }}
+              >
+                <p className="mt-5 text-[14px] font-medium text-electric-soft">
+                  {item.issue}
+                </p>
 
-          <p className="mt-5 max-w-[42ch] text-[16px] leading-relaxed text-chrome">
-            {item.detail}
-          </p>
+                <p className="display-lg mt-3 text-[clamp(2.2rem,4.6vw,3.9rem)] tabular-nums text-white">
+                  {item.price}
+                </p>
 
-          <p className="mt-4 max-w-[46ch] text-[14px] leading-relaxed text-dim">
+                <p className="mt-4 max-w-[44ch] text-[16px] leading-relaxed text-chrome">
+                  {item.detail}
+                </p>
+              </motion.div>
+            </AnimatePresence>
+          </div>
+
+          <p className="mt-3 max-w-[46ch] text-[14px] leading-relaxed text-dim">
             {data.note} Harga final ditentukan setelah pemeriksaan langsung.
           </p>
 
-          <a
-            href={waLink(
-              `Halo Nexora Data, saya mau servis ${data.full.toLowerCase()} dengan keluhan: ${item.issue}. Estimasi di situs ${item.price}. Bisa dibantu?`,
-            )}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-9 inline-flex bg-electric px-6 py-4 text-[15px] font-semibold text-white transition-colors hover:bg-white hover:text-ink"
-          >
-            Tanya lewat WhatsApp
-          </a>
+          <Magnetic className="mt-9">
+            <a
+              href={waLink(
+                `Halo Nexora Data, saya mau servis ${data.full.toLowerCase()} dengan keluhan: ${item.issue}. Estimasi di situs ${item.price}. Bisa dibantu?`,
+              )}
+              target="_blank"
+              rel="noopener noreferrer"
+              data-cursor="Kirim pesan"
+              className="inline-flex bg-electric px-6 py-4 text-[15px] font-semibold text-white transition-colors hover:bg-white hover:text-ink"
+            >
+              Tanya lewat WhatsApp
+            </a>
+          </Magnetic>
         </div>
 
         <p className="mt-5 text-[14px] leading-relaxed text-ink-soft">

@@ -3,9 +3,11 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import type { MouseEvent } from "react";
+import { motion, useMotionValueEvent, useScroll } from "motion/react";
+import { useState, type MouseEvent } from "react";
 import { useChapterTheme, type Chapter } from "@/components/use-chapter-theme";
 import { cn } from "@/lib/cn";
+import { ease } from "@/lib/motion";
 import { site, waDefault } from "@/lib/site";
 
 const links = [
@@ -56,8 +58,19 @@ export function SiteHeader() {
   const pathname = usePathname();
   const theme = themeClass[chapter];
 
+  const [hidden, setHidden] = useState(false);
+  const { scrollY, scrollYProgress } = useScroll();
+
+  // Reading down hides the bar; any upward scroll brings it straight back.
+  useMotionValueEvent(scrollY, "change", (current) => {
+    const previous = scrollY.getPrevious() ?? 0;
+    setHidden(current > 180 && current > previous);
+  });
+
   return (
-    <header
+    <motion.header
+      animate={{ y: hidden ? "-100%" : "0%" }}
+      transition={{ duration: 0.4, ease: ease.out }}
       className={cn(
         "fixed inset-x-0 top-0 z-50 transition-colors duration-300",
         theme.bar,
@@ -141,6 +154,12 @@ export function SiteHeader() {
           </a>
         </div>
       </div>
-    </header>
+
+      <motion.div
+        aria-hidden="true"
+        style={{ scaleX: scrollYProgress }}
+        className="absolute inset-x-0 bottom-0 h-[2px] origin-left bg-current opacity-60"
+      />
+    </motion.header>
   );
 }

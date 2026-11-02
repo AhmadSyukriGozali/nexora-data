@@ -3,13 +3,14 @@ import type { ReactNode } from "react";
 import { cn } from "@/lib/cn";
 
 /** Matches the background the button sits on, not the button's own colour. */
-type ButtonTone = "on-dark" | "on-light" | "on-blue" | "hero";
+type ButtonTone = "on-dark" | "on-light" | "on-blue" | "hero" | "chrome";
 
 const toneClass: Record<ButtonTone, string> = {
   "on-dark": "bg-electric text-white hover:bg-white hover:text-ink",
   "on-light": "bg-ink text-white hover:bg-electric",
   "on-blue": "bg-ink text-white hover:bg-navy",
   hero: "bg-navy text-white hover:bg-ink",
+  chrome: "bg-chrome text-ink hover:bg-white",
 };
 
 const sizeClass = {

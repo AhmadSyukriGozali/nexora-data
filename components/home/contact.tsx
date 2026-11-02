@@ -7,19 +7,28 @@ export function Contact() {
   return (
     <Section id="kontak" tone="navy" className="scroll-mt-20 section-pad">
       <div className="container-page">
-        <Reveal>
-          <p className="max-w-[34ch] text-[18px] leading-relaxed text-chrome md:text-[20px]">
-            Kirim foto kerusakan dan ceritakan keluhannya. Admin akan balas
-            dengan estimasi awal.
-          </p>
-        </Reveal>
+        <div className="grid gap-8 md:grid-cols-12 md:gap-x-12">
+          <Reveal className="md:col-span-7" variant="mask">
+            <h2 className="display-lg text-[clamp(2.1rem,4.8vw,4.2rem)] text-chrome">
+              Bawa perangkatnya, atau kirim foto dulu.
+            </h2>
+          </Reveal>
 
-        <Reveal delay={80}>
+          <Reveal delay={90} className="md:col-span-5 md:pt-2" variant="right">
+            <p className="max-w-[42ch] text-[16px] leading-relaxed text-dim">
+              Kirim foto kerusakan dan ceritakan keluhannya. Admin akan balas
+              dengan estimasi awal pada jam buka.
+            </p>
+          </Reveal>
+        </div>
+
+        <Reveal delay={60}>
           <a
             href={waDefault}
             target="_blank"
             rel="noopener noreferrer"
-            className="mt-8 block font-display text-[clamp(2.3rem,8.6vw,8rem)] font-bold leading-[0.95] tracking-[-0.04em] text-chrome transition-colors hover:text-electric-soft"
+            data-cursor="Chat WhatsApp"
+            className="mt-10 block font-display text-[clamp(2.2rem,8.4vw,7.6rem)] font-bold leading-[0.95] tracking-[-0.04em] text-chrome transition-colors hover:text-electric-soft"
           >
             {site.phone.display}
           </a>
@@ -27,7 +36,7 @@ export function Contact() {
 
         <div className="mt-14 grid gap-10 md:grid-cols-3">
           <div>
-            <h2 className="text-[15px] font-semibold text-dim">Alamat</h2>
+            <h3 className="text-[15px] font-semibold text-dim">Alamat</h3>
             <address className="mt-4 not-italic text-[15px] leading-relaxed text-chrome">
               {site.address.line1}
               <br />
@@ -46,7 +55,7 @@ export function Contact() {
           </div>
 
           <div>
-            <h2 className="text-[15px] font-semibold text-dim">Jam buka</h2>
+            <h3 className="text-[15px] font-semibold text-dim">Jam buka</h3>
             <p className="mt-4 text-[15px] leading-relaxed text-chrome">
               {site.hours.days}
               <br />
@@ -58,7 +67,7 @@ export function Contact() {
           </div>
 
           <div>
-            <h2 className="text-[15px] font-semibold text-dim">Lainnya</h2>
+            <h3 className="text-[15px] font-semibold text-dim">Lainnya</h3>
             <a
               href={site.instagram.url}
               target="_blank"
@@ -75,19 +84,19 @@ export function Contact() {
 
         <div className="mt-14 grid gap-8 md:grid-cols-12 md:gap-x-10">
           <div className="md:col-span-8">
-            <div className="h-[260px] overflow-hidden bg-surface sm:h-[300px] md:h-[340px]">
+            <div className="bg-surface p-2">
               <iframe
                 title="Peta lokasi Nexora Data di Jl. Raya Pulo Gebang No. 8, Jakarta Timur"
                 src={mapsEmbedUrl}
-                className="h-full w-full border-0"
+                className="h-[260px] w-full border-0 sm:h-[300px] md:h-[360px]"
                 referrerPolicy="no-referrer-when-downgrade"
                 allowFullScreen
               />
             </div>
           </div>
 
-          <div className="md:col-span-4 md:pt-1">
-            <h2 className="text-[15px] font-semibold text-dim">Lokasi toko</h2>
+          <Reveal delay={60} className="md:col-span-4 md:pt-1">
+            <h3 className="text-[15px] font-semibold text-dim">Lokasi toko</h3>
             <p className="mt-3 max-w-[38ch] text-[15px] leading-relaxed text-chrome">
               Toko berada di Jl. Raya Pulo Gebang, seberang jalur angkutan
               umum. Parkir motor tersedia di depan.
@@ -101,7 +110,7 @@ export function Contact() {
               Buka di Google Maps
               <span aria-hidden="true">→</span>
             </a>
-          </div>
+          </Reveal>
         </div>
       </div>
     </Section>
