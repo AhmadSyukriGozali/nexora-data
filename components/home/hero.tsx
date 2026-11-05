@@ -130,7 +130,7 @@ export function Hero() {
                       Diagnosa gratis
                     </dt>
                     <dd className="mt-1 text-[14px] leading-relaxed text-dim">
-                      Tanpa biaya pemeriksaan, tanpa kewajiban melanjutkan.
+                      Tanpa biaya seperserpun.
                     </dd>
                   </div>
 
@@ -163,8 +163,8 @@ export function Hero() {
               animate="visible"
               className="max-w-[52ch] text-[16px] leading-relaxed text-white md:col-span-6 md:text-[18px]"
             >
-              Servis HP, laptop, PC, dan printer di Pulo Gebang. Harga disepakati
-              sebelum dikerjakan, dan setiap perbaikan ditutup garansi{" "}
+              Servis HP, laptop, PC, dan Printer di Pulo Gebang. Diagnosa Gratis, Harga disepakati
+              sebelum dikerjakan, Proses Perbaikan, Selesai diperbaiki dan garansi{" "}
               {site.guarantee}.
             </motion.p>
 
@@ -187,6 +187,7 @@ export function Hero() {
 
               <a
                 href="#layanan"
+                data-cursor="Lihat layanan"
                 className="text-[15px] font-semibold text-ink underline decoration-ink/40 decoration-2 underline-offset-4 transition-colors hover:decoration-ink"
               >
                 Lihat layanan

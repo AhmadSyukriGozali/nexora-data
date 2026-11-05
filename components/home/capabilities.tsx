@@ -153,7 +153,7 @@ export function Capabilities() {
         aria-hidden="true"
         style={{ x: springX, y: springY }}
         animate={{
-          opacity: active === null ? 0 : 1,
+          opacity: active === null ? 0 : 0.75,
           scale: active === null ? 0.95 : 1,
         }}
         transition={{ duration: 0.25, ease: ease.out }}

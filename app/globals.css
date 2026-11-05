@@ -354,7 +354,7 @@ html.js [data-reveal].is-in {
 }
 
 .page-enter {
-  animation: page-in 520ms var(--ease-out-expo) both;
+  animation: page-in 520ms var(--ease-out-expo) backwards;
 }
 
 @media (prefers-reduced-motion: reduce) {

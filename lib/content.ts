@@ -61,9 +61,9 @@ export const processSteps = [
       "Kamu terima rincian part dan jasa. Tidak ada biaya tambahan tanpa persetujuanmu.",
   },
   {
-    title: "Selesai, bergaransi dua minggu.",
+    title: `Selesai, bergaransi ${site.guarantee}.`,
     description:
-      "Kami uji ulang sebelum diserahkan. Garansi 14 hari untuk jasa dan part yang kami pasang.",
+      `Kami uji ulang sebelum diserahkan. Garansi ${site.guarantee} untuk jasa dan part yang kami pasang.`,
   },
 ] as const;
 

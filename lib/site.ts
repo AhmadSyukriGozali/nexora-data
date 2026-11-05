@@ -40,7 +40,7 @@ export const site = {
     note: "Termasuk Sabtu, Minggu, dan hari libur nasional.",
   },
 
-  guarantee: "2 minggu",
+  guarantee: "Perpanjang",
 } as const;
 
 /** Builds a wa.me link with a pre-filled message. */

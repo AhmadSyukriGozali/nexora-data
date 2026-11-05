@@ -99,7 +99,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <MotionProvider>
           <a
             href="#konten"
-            className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[80] focus:bg-electric focus:px-5 focus:py-3 focus:text-sm focus:font-semibold focus:text-white"
+            className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-80 focus:bg-electric focus:px-5 focus:py-3 focus:text-sm focus:font-semibold focus:text-white"
           >
             Lompat ke konten
           </a>
