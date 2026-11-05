@@ -166,7 +166,7 @@ export function WelcomePortal() {
             <>
               <p data-welcome-eyebrow>Selamat datang di</p>
               <p data-welcome-support>
-                Servis HP, laptop & PC · Pulo Gebang, {site.address.city}
+                Servis HP, laptop, PC & printer · Pulo Gebang, {site.address.city}
               </p>
               <span data-welcome-scroll>Pilih satu huruf, lalu gulir ↓</span>
             </>

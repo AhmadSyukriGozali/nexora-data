@@ -9,7 +9,7 @@ import { Section } from "@/components/ui/section";
 import { ease } from "@/lib/motion";
 import { site, waDefault } from "@/lib/site";
 
-const lines = ["Servis", "HP, Laptop", "& PC"];
+const lines = ["Servis", "HP, Laptop,", "PC & Printer"];
 
 const stage = {
   hidden: {},
@@ -93,7 +93,7 @@ export function Hero() {
               initial="hidden"
               animate="visible"
             >
-              <h1 className="font-display text-[clamp(3.15rem,10.4vw,10.25rem)] font-extrabold uppercase leading-[0.82] tracking-[-0.045em] text-chrome">
+              <h1 className="font-display text-[clamp(2.9rem,8.2vw,8.1rem)] font-extrabold uppercase leading-[0.82] tracking-[-0.045em] text-chrome">
                 {lines.map((text, index) => (
                   <span key={text} className="block overflow-hidden pb-[0.05em]">
                     <motion.span
@@ -163,8 +163,9 @@ export function Hero() {
               animate="visible"
               className="max-w-[52ch] text-[16px] leading-relaxed text-white md:col-span-6 md:text-[18px]"
             >
-              Servis HP, laptop, dan PC di Pulo Gebang. Harga disepakati sebelum
-              dikerjakan, dan setiap perbaikan ditutup garansi {site.guarantee}.
+              Servis HP, laptop, PC, dan printer di Pulo Gebang. Harga disepakati
+              sebelum dikerjakan, dan setiap perbaikan ditutup garansi{" "}
+              {site.guarantee}.
             </motion.p>
 
             <motion.div

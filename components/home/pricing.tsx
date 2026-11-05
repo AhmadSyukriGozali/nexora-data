@@ -70,7 +70,7 @@ export function Pricing() {
 
           <table className="price-table relative w-full border-collapse text-left">
             <caption className="sr-only">
-              Estimasi tarif servis HP, laptop, dan PC di Nexora Data
+              Estimasi tarif servis HP, laptop, PC, dan printer di Nexora Data
             </caption>
 
             <thead>
@@ -130,6 +130,7 @@ export function Pricing() {
         <div className="mt-8 space-y-3 lg:hidden">
           {deviceOrder.map((device) => {
             const isOpen = open === device;
+            const rows = priceRows.filter((row) => row[device] !== "—");
 
             return (
               <div key={device} className="bg-surface">
@@ -163,7 +164,7 @@ export function Pricing() {
                 >
                   <div className="overflow-hidden">
                     <ul className="px-5 pb-5">
-                      {priceRows.map((row) => (
+                      {rows.map((row) => (
                         <li
                           key={row.action}
                           className="flex items-baseline justify-between gap-4 py-2.5 text-[15px]"

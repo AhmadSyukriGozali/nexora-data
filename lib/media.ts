@@ -6,6 +6,12 @@
 
 export const imageCredits = [
   {
+    title: "Repairing printer",
+    author: "Robo Michalec",
+    licence: "CC0",
+    url: "https://commons.wikimedia.org/wiki/File:Repairing_printer.jpg",
+  },
+  {
     title: "Laptop Repair",
     author: "Augustin Wafflart",
     licence: "CC BY 4.0",

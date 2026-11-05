@@ -43,6 +43,10 @@ const shots = [
     src: "/images/repair-lab.webp",
     alt: "Teknisi membuka cangkang ponsel dengan alat presisi",
   },
+  {
+    src: "/images/printer-repair.webp",
+    alt: "Teknisi memeriksa bagian dalam printer yang sudah dibuka",
+  },
 ];
 
 /**

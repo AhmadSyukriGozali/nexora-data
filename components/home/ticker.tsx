@@ -7,6 +7,7 @@ const items = [
   "Motherboard & cairan",
   "Upgrade RAM & SSD",
   "Rakit & servis PC",
+  "Servis printer",
   "Pemulihan data",
   "Diagnosa gratis",
   "Garansi 2 minggu",

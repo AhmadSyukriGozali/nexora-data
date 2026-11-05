@@ -4,9 +4,9 @@
  */
 export const site = {
   name: "Nexora Data",
-  url: "https://nexoradata.id",
+  url: "https://nexora-data-service.vercel.app",
   description:
-    "Servis HP, laptop, dan PC di Pulo Gebang, Cakung, Jakarta Timur. Diagnosa gratis, harga disepakati sebelum dikerjakan, garansi 2 minggu.",
+    "Servis HP, laptop, PC, dan printer di Pulo Gebang, Cakung, Jakarta Timur. Diagnosa gratis, harga disepakati sebelum dikerjakan, garansi 2 minggu.",
 
   phone: {
     display: "0815 1616 343",

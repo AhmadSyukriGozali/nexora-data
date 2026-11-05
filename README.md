@@ -1,7 +1,7 @@
 # Nexora Data
 
-Situs profil dan katalog layanan Nexora Data: servis HP, laptop, dan PC di
-Pulo Gebang, Cakung, Jakarta Timur.
+Situs profil dan katalog layanan Nexora Data: servis HP, laptop, PC, dan
+printer di Pulo Gebang, Cakung, Jakarta Timur.
 
 Dibangun dengan Next.js 16 (App Router), React 19, TypeScript, dan Tailwind CSS v4.
 
@@ -45,7 +45,7 @@ lib/
 
 - **Harga dan daftar kerusakan** ada di `lib/content.ts`
   (`estimates`, `priceRows`). Tabel desktop dan daftar seluler memakai data
-  yang sama.
+  yang sama; daftar seluler menyembunyikan baris bertanda `—`.
 - **Alamat, jam buka, WhatsApp, Instagram** ada di `lib/site.ts`.
 - **Teks halaman** berada langsung di komponennya; bagian beranda ada di
   `components/home/`.

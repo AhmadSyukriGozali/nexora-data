@@ -17,8 +17,8 @@ export function SiteFooter() {
               className="h-auto w-full max-w-[340px]"
             />
             <p className="mt-7 text-[17px] leading-relaxed text-ink-soft">
-              Servis HP, laptop, dan PC di Pulo Gebang. Diagnosa gratis, harga
-              disepakati sebelum dikerjakan, bergaransi {site.guarantee}.
+              Servis HP, laptop, PC, dan printer di Pulo Gebang. Diagnosa gratis,
+              harga disepakati sebelum dikerjakan, bergaransi {site.guarantee}.
             </p>
             <a
               href={waDefault}

@@ -3,7 +3,7 @@
 import { useState, type FormEvent } from "react";
 import { waLink } from "@/lib/site";
 
-const devices = ["HP", "Laptop", "PC / Desktop", "Belum tahu"];
+const devices = ["HP", "Laptop", "PC / Desktop", "Printer", "Belum tahu"];
 
 const fieldClass =
   "w-full border border-white/12 bg-white/[0.06] px-4 py-3.5 text-[16px] " +

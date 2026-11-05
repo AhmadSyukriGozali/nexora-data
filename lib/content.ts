@@ -37,6 +37,11 @@ export const capabilities = [
     description:
       "Drive yang tidak terbaca, file terhapus, atau sistem yang tidak mau boot masih bisa diselamatkan.",
   },
+  {
+    title: "Servis printer",
+    description:
+      "Head bergaris, kertas macet, tinta tidak keluar, sampai unit yang tidak terdeteksi. Inkjet, laser, dan printer multifungsi.",
+  },
 ] as const;
 
 export const processSteps = [
@@ -77,7 +82,7 @@ export const promiseItems = [
   },
 ] as const;
 
-export type DeviceKey = "hp" | "laptop" | "pc";
+export type DeviceKey = "hp" | "laptop" | "pc" | "printer";
 
 type DeviceEstimates = {
   label: string;
@@ -191,7 +196,7 @@ export const estimates: Record<DeviceKey, DeviceEstimates> = {
       },
       {
         issue: "Rakit PC baru",
-        price: "Rp750 rb",
+        price: "Rp200 rb – Rp750 rb",
         detail: "Jasa rakit, instalasi sistem, dan tes beban sebelum diserahkan.",
       },
       {
@@ -201,9 +206,58 @@ export const estimates: Record<DeviceKey, DeviceEstimates> = {
       },
     ],
   },
+
+  printer: {
+    label: "Printer",
+    full: "Printer & multifungsi",
+    note: "Harga print head sangat tergantung seri printer. Kalau biaya perbaikan mendekati harga unit baru, kami akan bilang terus terang sebelum kamu memutuskan.",
+    items: [
+      {
+        issue: "Hasil cetak bergaris atau pudar",
+        price: "Rp100 rb – Rp300 rb",
+        detail:
+          "Head cleaning sampai flushing; bila head rusak, penggantian dibahas terpisah.",
+      },
+      {
+        issue: "Kertas macet atau tidak tertarik",
+        price: "Rp100 rb – Rp300 rb",
+        detail: "Roller, paper feed, dan sensor kertas dibersihkan atau diganti.",
+      },
+      {
+        issue: "Printer tidak terdeteksi",
+        price: "Rp100 rb – Rp300 rb",
+        detail:
+          "Cek kabel, port, driver, dan koneksi Wi-Fi sebelum menyentuh hardware.",
+      },
+      {
+        issue: "Isi tinta atau refill toner",
+        price: "Rp50 rb – Rp250 rb",
+        detail:
+          "Jasa isi dan bersih-bersih; harga tinta atau toner dihitung terpisah.",
+      },
+      {
+        issue: "Reset waste ink pad",
+        price: "Rp100 rb – Rp300 rb",
+        detail:
+          "Reset counter dan ganti pad bila sudah jenuh, supaya tidak bocor.",
+      },
+      {
+        issue: "Ganti print head",
+        price: "Rp400 rb – Rp1,5 jt",
+        detail:
+          "Part original atau OEM, dites nozzle check sebelum diserahkan.",
+      },
+      {
+        issue: "Mati total atau board",
+        price: "Rp300 rb – Rp2 jt",
+        detail:
+          "Adaptor/PSU diperiksa dulu; penggantian mainboard dikonfirmasi sebelum dikerjakan.",
+      },
+    ],
+  },
 };
 
-export const deviceOrder: DeviceKey[] = ["hp", "laptop", "pc"];
+export const deviceOrder: DeviceKey[] = ["hp", "laptop", "pc", "printer"];
 
 /** Compact price table shown on large screens; the mobile layout reuses it. */
 export const priceRows = [
@@ -212,36 +266,70 @@ export const priceRows = [
     hp: "350 rb – 1,2 jt",
     laptop: "700 rb – 2 jt",
     pc: "600 rb – 1,8 jt",
+    printer: "—",
   },
   {
     action: "Ganti baterai",
     hp: "150 – 450 rb",
     laptop: "300 – 800 rb",
     pc: "—",
+    printer: "—",
   },
   {
     action: "Servis kena air",
     hp: "150 – 500 rb",
     laptop: "500 rb – 2 jt",
     pc: "300 – 800 rb",
+    printer: "—",
   },
   {
     action: "Upgrade RAM & SSD",
     hp: "250 – 700 rb",
     laptop: "250 – 900 rb",
     pc: "250 rb – 1,2 jt",
+    printer: "—",
   },
   {
     action: "Bersih debu & repasta",
     hp: "100 – 200 rb",
     laptop: "150 – 300 rb",
     pc: "150 – 300 rb",
+    printer: "100 – 300 rb",
   },
   {
     action: "Recovery data",
     hp: "300 rb – 1,5 jt",
     laptop: "300 rb – 1,5 jt",
     pc: "300 rb – 1,5 jt",
+    printer: "—",
+  },
+  {
+    action: "Servis head & flushing",
+    hp: "—",
+    laptop: "—",
+    pc: "—",
+    printer: "75 – 450 rb",
+  },
+  {
+    action: "Kertas macet",
+    hp: "—",
+    laptop: "—",
+    pc: "—",
+    printer: "100 – 300 rb",
+  },
+  {
+    action: "Isi tinta / toner",
+    hp: "—",
+    laptop: "—",
+    pc: "—",
+    printer: "50 – 250 rb",
+  },
+  {
+    action: "Ganti print head / board",
+    hp: "—",
+    laptop: "—",
+    pc: "—",
+    printer: "400 rb – 2 jt",
   },
 ] as const;
 
@@ -282,6 +370,11 @@ export const faqs = [
       "Bisa. Hubungi WhatsApp admin untuk konfirmasi alamat dan ekspedisi yang dipakai. Biaya pengiriman pulang-pergi ditanggung pemilik perangkat.",
   },
   {
+    question: "Printer saya hasil cetaknya bergaris, apakah bisa diperbaiki?",
+    answer:
+      "Bisa. Garis atau warna pudar biasanya berasal dari head yang kering atau tersumbat. Kami mulai dari head cleaning dan flushing; kalau hasilnya belum membaik, baru dibahas penggantian print head beserta biayanya. Printer laser yang hasilnya kotor juga bisa dibersihkan tanpa bongkar penuh.",
+  },
+  {
     question: "Metode pembayaran apa saja?",
     answer:
       "Tunai, transfer bank, dan QRIS. Pembayaran dilakukan setelah perangkat dites dan kamu pastikan kondisinya sesuai kesepakatan.",
@@ -293,7 +386,7 @@ export const faqs = [
  * page until the business verifies each one.
  */
 export const claimsPlaceholder = {
-  founded: "2019",
-  devicesFixed: "1.500+",
+  founded: "08-mei-2026",
+  devicesFixed: "500+",
   rating: "4,9/5",
 } as const;

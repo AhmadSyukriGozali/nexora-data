@@ -18,6 +18,7 @@ export const localBusinessJsonLd = {
     "Servis handphone",
     "Servis laptop",
     "Servis PC dan desktop",
+    "Servis printer",
     "Upgrade RAM dan SSD",
     "Pemulihan data",
   ],

@@ -25,7 +25,7 @@ const jakarta = Plus_Jakarta_Sans({
 export const metadata: Metadata = {
   metadataBase: new URL(site.url),
   title: {
-    default: "Servis HP, Laptop & PC Jakarta Timur · Nexora Data",
+    default: "Servis HP, Laptop, PC & Printer Jakarta Timur · Nexora Data",
     template: "%s · Nexora Data",
   },
   description: site.description,
@@ -33,6 +33,7 @@ export const metadata: Metadata = {
     "servis HP Jakarta Timur",
     "servis laptop Jakarta Timur",
     "servis PC Cakung",
+    "servis printer Jakarta Timur",
     "ganti LCD laptop",
     "service HP Pulo Gebang",
     "upgrade SSD laptop",
@@ -48,20 +49,20 @@ export const metadata: Metadata = {
     locale: "id_ID",
     url: site.url,
     siteName: site.name,
-    title: "Servis HP, Laptop & PC Jakarta Timur · Nexora Data",
+    title: "Servis HP, Laptop, PC & Printer Jakarta Timur · Nexora Data",
     description: site.description,
     images: [
       {
         url: "/brand/og-nexora.jpg",
         width: 1200,
         height: 630,
-        alt: "Nexora Data: servis HP, laptop, dan PC di Jakarta Timur",
+        alt: "Nexora Data: servis HP, laptop, PC, dan printer di Jakarta Timur",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Servis HP, Laptop & PC Jakarta Timur · Nexora Data",
+    title: "Servis HP, Laptop, PC & Printer Jakarta Timur · Nexora Data",
     description: site.description,
     images: ["/brand/og-nexora.jpg"],
   },

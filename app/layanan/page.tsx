@@ -9,14 +9,14 @@ import { estimates, type DeviceKey } from "@/lib/content";
 import { site, waLink } from "@/lib/site";
 
 export const metadata: Metadata = {
-  title: "Layanan Servis HP, Laptop & PC",
+  title: "Layanan Servis HP, Laptop, PC & Printer",
   description:
-    "Rincian layanan servis HP, laptop, dan PC di Nexora Data Pulo Gebang: layar, baterai, motherboard, upgrade RAM/SSD, rakit PC, dan pemulihan data.",
+    "Rincian layanan servis HP, laptop, PC, dan printer di Nexora Data Pulo Gebang: layar, baterai, motherboard, upgrade RAM/SSD, rakit PC, servis printer, dan pemulihan data.",
   alternates: { canonical: "/layanan" },
   openGraph: {
-    title: "Layanan Servis HP, Laptop & PC · Nexora Data",
+    title: "Layanan Servis HP, Laptop, PC & Printer · Nexora Data",
     description:
-      "Layar, baterai, motherboard, upgrade RAM/SSD, rakit PC, dan pemulihan data di Jakarta Timur.",
+      "Layar, baterai, motherboard, upgrade RAM/SSD, rakit PC, servis printer, dan pemulihan data di Jakarta Timur.",
     url: "/layanan",
   },
 };
@@ -55,6 +55,14 @@ const serviceBlocks: ServiceBlock[] = [
     alt: "Motherboard komputer dengan soket prosesor dan slot memori terlihat dari dekat",
     tone: "paper",
   },
+  {
+    device: "printer",
+    title: "Servis Printer",
+    lead: "Cetakan bergaris, kertas macet, tinta tidak keluar, atau printer yang tidak terdeteksi. Kami tangani inkjet, laser, dan multifungsi, termasuk reset waste ink dan penggantian print head.",
+    image: "/images/printer-repair.webp",
+    alt: "Teknisi memeriksa bagian dalam printer yang sudah dibuka",
+    tone: "navy",
+  },
 ];
 
 export default function LayananPage() {
@@ -70,8 +78,8 @@ export default function LayananPage() {
 
           <Reveal delay={80}>
             <p className="mt-6 max-w-[54ch] text-[18px] leading-relaxed text-dim md:text-[19px]">
-              Servis HP, laptop, dan PC di Pulo Gebang, Cakung, Jakarta Timur.
-              Diagnosa gratis, harga disepakati lebih dulu.
+              Servis HP, laptop, PC, dan printer di Pulo Gebang, Cakung,
+              Jakarta Timur. Diagnosa gratis, harga disepakati lebih dulu.
             </p>
           </Reveal>
         </div>
