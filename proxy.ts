@@ -1,5 +1,7 @@
+import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { WELCOME_COOKIE, WELCOME_MAX_AGE } from "@/lib/welcome";
+import { getSupabaseAnonKey, getSupabaseUrl } from "@/lib/supabase/env";
 
 /**
  * Crawler dan pratinjau tautan (WhatsApp, Facebook, dsb.) tidak boleh
@@ -13,7 +15,14 @@ const BOTS =
  * pada respons pengalihan itu juga, jadi "Masuk ke beranda" langsung sampai
  * ke beranda tanpa putaran ulang.
  */
-export function proxy(request: NextRequest) {
+export async function proxy(request: NextRequest) {
+  const pathname = request.nextUrl.pathname;
+  const isAdminLogin = pathname === "/admin/login";
+
+  if (pathname.startsWith("/admin") && !isAdminLogin) {
+    return guardAdmin(request);
+  }
+
   if (request.cookies.has(WELCOME_COOKIE)) return NextResponse.next();
 
   // Prefetch dan navigasi antarhalaman dari dalam situs tidak ikut dialihkan.
@@ -35,5 +44,55 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: "/",
+  matcher: ["/", "/admin/:path*"],
 };
+
+/**
+ * Halaman /admin hanya untuk staf aktif (owner/teknisi), kecuali /admin/login
+ * yang harus bisa dibuka tanpa sesi. API admin tidak lewat sini: setiap Route
+ * Handler memeriksa sesi & role sendiri.
+ */
+async function guardAdmin(request: NextRequest) {
+  let response = NextResponse.next({ request });
+
+  const supabase = createServerClient(getSupabaseUrl(), getSupabaseAnonKey(), {
+    cookies: {
+      getAll() {
+        return request.cookies.getAll();
+      },
+      setAll(cookiesToSet) {
+        cookiesToSet.forEach(({ name, value }) => {
+          request.cookies.set(name, value);
+        });
+        response = NextResponse.next({ request });
+        cookiesToSet.forEach(({ name, value, options }) => {
+          response.cookies.set(name, value, options);
+        });
+      },
+    },
+  });
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return NextResponse.redirect(new URL("/admin/login", request.url));
+  }
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role, is_active")
+    .eq("id", user.id)
+    .maybeSingle<{ role: string; is_active: boolean }>();
+
+  const isStaff =
+    profile?.is_active === true &&
+    (profile.role === "owner" || profile.role === "teknisi");
+
+  if (!isStaff) {
+    return NextResponse.redirect(new URL("/admin/login", request.url));
+  }
+
+  return response;
+}
