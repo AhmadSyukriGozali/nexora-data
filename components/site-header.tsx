@@ -12,6 +12,7 @@ import { site, waDefault } from "@/lib/site";
 
 const links = [
   { href: "/layanan", label: "Layanan" },
+  { href: "/cek-status", label: "Cek Servis" },
   { href: "/#proses", label: "Proses" },
   { href: "/#tarif", label: "Tarif" },
   { href: "/#faq", label: "FAQ" },
@@ -97,7 +98,7 @@ export function SiteHeader() {
 
         <nav
           aria-label="Navigasi utama"
-          className="hidden items-center gap-8 text-[15px] md:flex"
+          className="hidden items-center gap-5 text-[14px] md:flex lg:gap-8 lg:text-[15px]"
         >
           {links.map((link) => {
             const active = link.href === pathname;

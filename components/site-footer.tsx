@@ -87,6 +87,9 @@ export function SiteFooter() {
               <Link href="/kontak" className="mt-2 block text-[15px]">
                 Formulir kontak
               </Link>
+              <Link href="/cek-status" className="mt-2 block text-[15px]">
+                Cek status servis
+              </Link>
             </div>
           </div>
         </div>
