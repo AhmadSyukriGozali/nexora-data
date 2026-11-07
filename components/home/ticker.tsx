@@ -4,7 +4,7 @@ import { cn } from "@/lib/cn";
 const items = [
   "Ganti LCD & layar",
   "Baterai & pengisian",
-  "Motherboard & cairan",
+  "Motherboard & Repasta",
   "Upgrade RAM & SSD",
   "Rakit & servis PC",
   "Servis printer",

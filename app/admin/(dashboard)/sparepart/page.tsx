@@ -6,6 +6,7 @@ import type {
 } from "@/lib/admin/types";
 import { getStaffSession } from "@/lib/supabase/auth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { getSparepartCostMap } from "@/lib/supabase/sparepart-costs";
 
 import { SparepartManager } from "./sparepart-manager";
 
@@ -15,6 +16,7 @@ export const metadata = { title: "Sparepart" };
 
 export default async function SparepartsPage() {
   const session = await getStaffSession();
+  const isOwner = session?.role === "owner";
   const supabase = await createSupabaseServerClient();
 
   const [sparepartsResult, movementsResult, ordersResult] = await Promise.all([
@@ -37,6 +39,18 @@ export default async function SparepartsPage() {
       .limit(200),
   ]);
 
+  const spareparts = (sparepartsResult.data ?? []) as Sparepart[];
+
+  if (isOwner) {
+    const costs = await getSparepartCostMap(
+      supabase,
+      spareparts.map((sparepart) => sparepart.id),
+    );
+    spareparts.forEach((sparepart) => {
+      sparepart.cost_price = costs.get(sparepart.id) ?? 0;
+    });
+  }
+
   return (
     <>
       <PageHeader
@@ -44,10 +58,11 @@ export default async function SparepartsPage() {
         description="Kelola katalog sparepart dan catat pergerakan stok. Stok hanya berubah lewat buku stok, bukan diedit langsung."
       />
       <SparepartManager
-        spareparts={(sparepartsResult.data ?? []) as Sparepart[]}
+        spareparts={spareparts}
         movements={(movementsResult.data ?? []) as StockMovement[]}
         orders={(ordersResult.data ?? []) as OrderOption[]}
-        canDelete={session?.role === "owner"}
+        canDelete={isOwner}
+        canSeeCost={isOwner}
       />
     </>
   );

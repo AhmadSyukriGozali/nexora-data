@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { jsonError } from "./http";
 import { createSupabaseServerClient } from "./server";
 
-export type StaffRole = "owner" | "teknisi";
+export type StaffRole = "owner" | "admin";
 
 export type StaffSession = {
   userId: string;
@@ -18,7 +18,7 @@ type ProfileRow = {
   is_active: boolean;
 };
 
-/** Sesi admin yang valid: user login + profil aktif + role owner/teknisi. */
+/** Sesi admin yang valid: user login + profil aktif + role owner/admin. */
 export async function getStaffSession(): Promise<StaffSession | null> {
   const supabase = await createSupabaseServerClient();
 
@@ -38,7 +38,7 @@ export async function getStaffSession(): Promise<StaffSession | null> {
   if (error || !data || !data.is_active) return null;
 
   const role = data.role;
-  if (role !== "owner" && role !== "teknisi") return null;
+  if (role !== "owner" && role !== "admin") return null;
 
   return {
     userId: user.id,

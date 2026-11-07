@@ -2,6 +2,28 @@ import { getStaffSession } from "@/lib/supabase/auth";
 import { dbErrorResponse, jsonError, jsonOk, parseBody, parseQuery } from "@/lib/supabase/http";
 import { sparepartCreateSchema, sparepartsQuerySchema } from "@/lib/supabase/schemas";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import {
+  getSparepartCostMap,
+  setSparepartCost,
+} from "@/lib/supabase/sparepart-costs";
+
+type ServerClient = Awaited<ReturnType<typeof createSupabaseServerClient>>;
+
+/** Tambahkan cost_price hanya untuk owner; admin tidak pernah menerimanya. */
+async function attachCosts(
+  supabase: ServerClient,
+  rows: Record<string, unknown>[],
+) {
+  const costs = await getSparepartCostMap(
+    supabase,
+    rows.map((row) => String(row.id)),
+  );
+
+  return rows.map((row) => ({
+    ...row,
+    cost_price: costs.get(String(row.id)) ?? 0,
+  }));
+}
 
 export async function GET(request: Request) {
   const session = await getStaffSession();
@@ -27,7 +49,10 @@ export async function GET(request: Request) {
   const mapped = dbErrorResponse(error);
   if (mapped) return mapped;
 
-  return jsonOk({ items: data ?? [], total: count ?? 0, limit, offset });
+  const rows = (data ?? []) as Record<string, unknown>[];
+  const items = session.role === "owner" ? await attachCosts(supabase, rows) : rows;
+
+  return jsonOk({ items, total: count ?? 0, limit, offset });
 }
 
 export async function POST(request: Request) {
@@ -37,15 +62,33 @@ export async function POST(request: Request) {
   const body = await parseBody(request, sparepartCreateSchema);
   if ("error" in body) return body.error;
 
+  const { cost_price, ...payload } = body.data;
+
+  if (cost_price !== undefined && session.role !== "owner") {
+    return jsonError("Hanya owner yang boleh mengatur harga modal", 403);
+  }
+
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase
     .from("spareparts")
-    .insert(body.data)
+    .insert(payload)
     .select("*")
     .single();
 
   const mapped = dbErrorResponse(error);
   if (mapped) return mapped;
+  if (!data) return jsonError("Gagal menyimpan sparepart", 500);
+
+  if (cost_price !== undefined) {
+    const { error: costError } = await setSparepartCost(
+      supabase,
+      String(data.id),
+      cost_price,
+    );
+    const costMapped = dbErrorResponse(costError);
+    if (costMapped) return costMapped;
+    return jsonOk({ ...data, cost_price }, 201);
+  }
 
   return jsonOk(data, 201);
 }

@@ -189,6 +189,21 @@ export const paymentUpdateSchema = z.strictObject({
 });
 
 // ---------------------------------------------------------------------------
+// Staf
+// ---------------------------------------------------------------------------
+export const staffCreateSchema = z.strictObject({
+  email: z.email("Email tidak valid").max(160),
+  full_name: z.string().trim().min(2).max(120),
+  password: z.string().min(8, "Password minimal 8 karakter").max(72),
+  role: z.enum(["owner", "admin"]).default("admin"),
+});
+
+export const staffUpdateSchema = z.strictObject({
+  role: z.enum(["owner", "admin"]).optional(),
+  is_active: z.boolean().optional(),
+});
+
+// ---------------------------------------------------------------------------
 // Sparepart & stok
 // ---------------------------------------------------------------------------
 export const sparepartCreateSchema = z.strictObject({

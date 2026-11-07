@@ -44,11 +44,13 @@ export function SparepartManager({
   movements,
   orders,
   canDelete,
+  canSeeCost,
 }: {
   spareparts: Sparepart[];
   movements: StockMovement[];
   orders: OrderOption[];
   canDelete: boolean;
+  canSeeCost: boolean;
 }) {
   const router = useRouter();
   const [search, setSearch] = useState("");
@@ -137,15 +139,18 @@ export function SparepartManager({
     setError(null);
 
     const form = new FormData(event.currentTarget);
+    const rawCostPrice = form.get("cost_price");
     const payload = {
       sku: textValue(form.get("sku")),
       name: textValue(form.get("name")),
       category: emptyToNull(form.get("category")),
       unit: textValue(form.get("unit")) || "pcs",
-      cost_price: numberValue(form.get("cost_price"), 0),
       sell_price: numberValue(form.get("sell_price"), 0),
       min_stock: numberValue(form.get("min_stock"), 0),
       is_active: booleanValue(form.get("is_active")),
+      ...(canSeeCost && rawCostPrice !== null
+        ? { cost_price: numberValue(rawCostPrice, 0) }
+        : {}),
     };
 
     const result = await apiRequest<Sparepart>(
@@ -330,16 +335,18 @@ export function SparepartManager({
                   />
                 </Field>
 
-                <Field label="Harga modal (Rp)">
-                  <input
-                    name="cost_price"
-                    type="number"
-                    min={0}
-                    step={1000}
-                    className={inputClass}
-                    defaultValue={editing?.cost_price ?? 0}
-                  />
-                </Field>
+                {canSeeCost ? (
+                  <Field label="Harga modal (Rp)" hint="Hanya terlihat oleh owner.">
+                    <input
+                      name="cost_price"
+                      type="number"
+                      min={0}
+                      step={1000}
+                      className={inputClass}
+                      defaultValue={editing?.cost_price ?? 0}
+                    />
+                  </Field>
+                ) : null}
 
                 <Field label="Harga jual (Rp)">
                   <input

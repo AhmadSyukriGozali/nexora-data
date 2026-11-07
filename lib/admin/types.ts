@@ -1,4 +1,4 @@
-export type StaffRole = "owner" | "teknisi";
+export type StaffRole = "owner" | "admin";
 
 export type DeviceType = "hp" | "laptop" | "pc" | "printer";
 
@@ -131,11 +131,21 @@ export type Sparepart = {
   name: string;
   category: string | null;
   unit: string;
-  cost_price: number;
+  /** Hanya diisi bila sesi adalah owner; admin tidak menerima nilainya. */
+  cost_price?: number;
   sell_price: number;
   stock_quantity: number;
   min_stock: number;
   is_active: boolean;
+};
+
+export type StaffMember = {
+  id: string;
+  email: string | null;
+  full_name: string;
+  role: StaffRole;
+  is_active: boolean;
+  created_at: string;
 };
 
 export type StockMovement = {

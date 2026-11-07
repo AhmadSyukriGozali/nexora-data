@@ -48,7 +48,7 @@ export const config = {
 };
 
 /**
- * Halaman /admin hanya untuk staf aktif (owner/teknisi), kecuali /admin/login
+ * Halaman /admin hanya untuk staf aktif (owner/admin), kecuali /admin/login
  * yang harus bisa dibuka tanpa sesi. API admin tidak lewat sini: setiap Route
  * Handler memeriksa sesi & role sendiri.
  */
@@ -88,7 +88,7 @@ async function guardAdmin(request: NextRequest) {
 
   const isStaff =
     profile?.is_active === true &&
-    (profile.role === "owner" || profile.role === "teknisi");
+    (profile.role === "owner" || profile.role === "admin");
 
   if (!isStaff) {
     return NextResponse.redirect(new URL("/admin/login", request.url));

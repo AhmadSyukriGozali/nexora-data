@@ -42,7 +42,7 @@ export default async function AdminLoginPage() {
             Masuk ke dashboard
           </h1>
           <p className="mt-1 text-sm text-dim">
-            Gunakan akun staf yang dibuat owner lewat dashboard Supabase.
+            Gunakan akun staf yang dibuat owner di menu Staf pada dashboard.
           </p>
 
           <div className="mt-6">

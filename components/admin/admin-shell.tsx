@@ -7,7 +7,9 @@ import { useState, type ReactNode } from "react";
 import { cn } from "@/lib/cn";
 import type { StaffRole } from "@/lib/admin/types";
 
-const NAV = [
+type NavItem = { href: string; label: string; ownerOnly?: boolean };
+
+const NAV: NavItem[] = [
   { href: "/admin", label: "Ringkasan" },
   { href: "/admin/order", label: "Order Servis" },
   { href: "/admin/pelanggan", label: "Pelanggan" },
@@ -16,6 +18,7 @@ const NAV = [
   { href: "/admin/sparepart", label: "Sparepart" },
   { href: "/admin/garansi", label: "Garansi" },
   { href: "/admin/testimoni", label: "Testimoni" },
+  { href: "/admin/staf", label: "Staf", ownerOnly: true },
 ];
 
 function isActive(pathname: string, href: string): boolean {
@@ -23,12 +26,18 @@ function isActive(pathname: string, href: string): boolean {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
+function NavLinks({
+  onNavigate,
+  isOwner,
+}: {
+  onNavigate?: () => void;
+  isOwner: boolean;
+}) {
   const pathname = usePathname();
 
   return (
     <nav className="flex flex-col gap-1">
-      {NAV.map((item) => {
+      {NAV.filter((item) => !item.ownerOnly || isOwner).map((item) => {
         const active = isActive(pathname, item.href);
         return (
           <Link
@@ -96,7 +105,7 @@ export function AdminShell({
       </p>
       <p className="truncate text-xs text-dim">{user.email}</p>
       <span className="mt-1 inline-flex rounded-full border border-white/15 px-2 py-0.5 text-[10px] uppercase tracking-[0.16em] text-dim">
-        {user.role === "owner" ? "Owner" : "Teknisi"}
+        {user.role === "owner" ? "Owner" : "Admin"}
       </span>
       <button
         type="button"
@@ -114,7 +123,7 @@ export function AdminShell({
       <aside className="hidden w-64 shrink-0 flex-col border-r border-white/10 bg-navy-soft py-5 lg:flex">
         <Brand />
         <div className="mt-7 flex-1 overflow-y-auto px-2">
-          <NavLinks />
+          <NavLinks isOwner={user.role === "owner"} />
         </div>
         {userBlock}
       </aside>
@@ -136,7 +145,10 @@ export function AdminShell({
       >
         <Brand />
         <div className="mt-7 flex-1 overflow-y-auto px-2">
-          <NavLinks onNavigate={() => setOpen(false)} />
+          <NavLinks
+            onNavigate={() => setOpen(false)}
+            isOwner={user.role === "owner"}
+          />
         </div>
         {userBlock}
       </aside>
@@ -158,7 +170,7 @@ export function AdminShell({
           </div>
           <div className="flex items-center gap-3 text-xs text-dim">
             <span className="hidden sm:inline">
-              {user.role === "owner" ? "Owner" : "Teknisi"}
+              {user.role === "owner" ? "Owner" : "Admin"}
             </span>
             <span className="grid h-8 w-8 place-items-center rounded-full border border-white/15 bg-white/5 text-xs font-semibold text-chrome">
               {(user.fullName || user.email || "N").slice(0, 1).toUpperCase()}

@@ -38,7 +38,7 @@ export async function POST(request: Request) {
     return jsonError("Akun tidak aktif atau bukan staf", 403);
   }
 
-  if (profile.role !== "owner" && profile.role !== "teknisi") {
+  if (profile.role !== "owner" && profile.role !== "admin") {
     await supabase.auth.signOut();
     return jsonError("Akun tidak memiliki akses admin", 403);
   }
