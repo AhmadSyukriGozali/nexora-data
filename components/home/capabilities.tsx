@@ -89,6 +89,34 @@ export function Capabilities() {
           </h2>
         </Reveal>
 
+        <Reveal delay={80} className="mt-9 md:hidden">
+          <ul
+            aria-label="Foto layanan"
+            tabIndex={0}
+            className="-mx-5 flex snap-x snap-mandatory gap-3 overflow-x-auto px-5 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          >
+            {capabilities.map((item, index) => (
+              <li
+                key={item.title}
+                className="w-[78%] shrink-0 snap-start"
+              >
+                <div className="relative aspect-[16/10] overflow-hidden bg-surface">
+                  <Image
+                    src={shots[index].src}
+                    alt={shots[index].alt}
+                    fill
+                    sizes="78vw"
+                    className="object-cover"
+                  />
+                </div>
+                <p className="mt-2 text-[13px] font-medium text-ink-soft">
+                  {item.title}
+                </p>
+              </li>
+            ))}
+          </ul>
+        </Reveal>
+
         <ul
           className="mt-12 space-y-10 md:mt-16 md:space-y-0"
           onPointerMove={trackPointer}
