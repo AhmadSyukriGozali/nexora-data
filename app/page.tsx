@@ -1,5 +1,4 @@
 import { CallToAction } from "@/components/home/call-to-action";
-import { Capabilities } from "@/components/home/capabilities";
 import { Contact } from "@/components/home/contact";
 import { EstimateSection } from "@/components/home/estimate-section";
 import { Faq } from "@/components/home/faq";
@@ -7,10 +6,9 @@ import { Hero } from "@/components/home/hero";
 import { PhotoBand } from "@/components/home/photo-band";
 import { Pricing } from "@/components/home/pricing";
 import { Process } from "@/components/home/process";
-import { Ticker } from "@/components/home/ticker";
-import { OurPromise } from "@/components/home/our-promise";
-import { Quote } from "@/components/home/quote";
+import { ServicesGrid } from "@/components/home/services-grid";
 import { Testimonials } from "@/components/home/testimonials";
+import { WhyChoose } from "@/components/home/why-choose";
 import { faqs } from "@/lib/content";
 import { atmospherePhotos } from "@/lib/media";
 import { faqJsonLd } from "@/lib/structured-data";
@@ -25,9 +23,13 @@ export default function Home() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqMarkup) }}
       />
 
+      {/* Bagian atas mengikuti desain referensi */}
       <Hero />
-      <Ticker />
-      <Capabilities />
+      <ServicesGrid />
+      <WhyChoose />
+      <CallToAction />
+
+      {/* Bagian lanjutan (gaya lama, belum diubah) */}
       <Process />
 
       <PhotoBand
@@ -38,8 +40,6 @@ export default function Home() {
 
       <EstimateSection />
       <Pricing />
-      <OurPromise />
-      <Quote />
       <Testimonials />
       <Faq />
 
@@ -49,7 +49,6 @@ export default function Home() {
       />
 
       <Contact />
-      <CallToAction />
     </>
   );
 }

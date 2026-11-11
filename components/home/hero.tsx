@@ -1,201 +1,156 @@
 "use client";
 
-import { motion, useScroll, useTransform } from "motion/react";
-import { useRef } from "react";
-import { OpenStatus } from "@/components/home/open-status";
-import { Magnetic } from "@/components/motion/magnetic";
-import { ShinyLink } from "@/components/ui/shiny-link";
+import { CalendarSearch, Settings, ShieldCheck, Zap } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
+import { motion } from "motion/react";
 import { Section } from "@/components/ui/section";
+import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { ease } from "@/lib/motion";
 import { site, waDefault } from "@/lib/site";
 
-const lines = ["Servis", "HP, Laptop,", "PC & Printer"];
+const badges = [
+  { icon: Zap, label: "Diagnosa", strong: "Gratis" },
+  { icon: ShieldCheck, label: "Garansi", strong: "Servis" },
+  { icon: Settings, label: "Spare Part", strong: "Berkualitas" },
+];
 
 const stage = {
   hidden: {},
-  visible: { transition: { staggerChildren: 0.1, delayChildren: 0.12 } },
+  visible: { transition: { staggerChildren: 0.09, delayChildren: 0.08 } },
 };
 
-const line = {
-  hidden: { y: "112%" },
-  visible: {
-    y: "0%",
-    transition: { duration: 1.05, ease: ease.out },
-  },
-};
-
-const meta = {
-  hidden: { opacity: 0, y: 12 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.7, ease: ease.out, delay: 0.5 },
-  },
+const rise = {
+  hidden: { opacity: 0, y: 22 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: ease.out } },
 };
 
 /**
- * The opening scene. The headline is cut into three bands that rise out of
- * their own masks, while the electric field below drifts at a different speed
- * on scroll. The status panel is the "object" in the frame: it gives the eye
- * something to land on besides type.
+ * Hero dua kolom: teks di kiri, foto perangkat di kanan yang memudar ke latar
+ * biru. Tepi bawah berbentuk gelombang yang menyambung ke section "Layanan Kami".
  */
 export function Hero() {
-  const ref = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({
-    target: ref,
-    offset: ["start start", "end start"],
-  });
-
-  const fieldY = useTransform(scrollYProgress, [0, 1], ["0%", "16%"]);
-  const panelY = useTransform(scrollYProgress, [0, 1], [0, -46]);
-  const headlineY = useTransform(scrollYProgress, [0, 1], [0, -22]);
-
   return (
-    <Section tone="navy" className="relative overflow-hidden">
+    <Section
+      tone="navy"
+      className="relative overflow-hidden bg-[#061836] bg-gradient-to-br from-[#061836] via-[#0a2a5e] to-[#0d47b8]"
+    >
       <div
-        ref={ref}
-        className="relative flex min-h-[100svh] flex-col pb-10 pt-[96px] md:pb-14 md:pt-[124px]"
-      >
+        aria-hidden="true"
+        className="pointer-events-none absolute -right-40 -top-32 h-[620px] w-[620px] rounded-full bg-[#2f7bff]/30 blur-[130px]"
+      />
+
+      <div className="relative mx-auto grid w-full max-w-[1340px] items-center gap-6 px-5 pb-28 pt-[104px] md:px-10 md:pb-36 md:pt-[120px] lg:min-h-[640px] lg:grid-cols-[1fr_1.05fr] lg:gap-0">
         <motion.div
-          aria-hidden="true"
-          style={{ y: fieldY }}
-          className="pointer-events-none absolute inset-x-0 bottom-0 h-[64%] bg-electric [clip-path:polygon(0_46%,100%_0,100%_100%,0_100%)]"
-        />
-
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute -left-32 top-24 h-[380px] w-[380px] rounded-full bg-electric/25 blur-[120px]"
-        />
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute -right-24 top-[42%] h-[460px] w-[460px] rounded-full bg-electric-soft/25 blur-[140px]"
-        />
-
-        <div className="container-page relative z-10 flex flex-1 flex-col">
-          <motion.div
-            variants={meta}
-            initial="hidden"
-            animate="visible"
-            className="flex flex-wrap items-center justify-between gap-x-8 gap-y-2 text-[14px]"
+          variants={stage}
+          initial="hidden"
+          animate="visible"
+          className="relative z-10"
+        >
+          <motion.p
+            variants={rise}
+            className="flex items-center gap-4 text-[12px] font-semibold uppercase tracking-[0.28em] text-white/90 sm:text-[13px]"
           >
-            <p>
-              <span className="text-chrome">{site.address.line2}</span>
-              <span className="text-dim"> · {site.address.city}</span>
-            </p>
-            <OpenStatus />
+            Solusi Teknologi Profesional
+            <span
+              aria-hidden="true"
+              className="hidden h-[2px] w-20 rounded-full bg-[#2f7bff] sm:block"
+            />
+          </motion.p>
+
+          <motion.h1
+            variants={rise}
+            className="mt-5 font-display text-[clamp(2.5rem,5.6vw,4.6rem)] font-extrabold leading-[1.02] tracking-[-0.03em] text-white"
+          >
+            Servis HP, Laptop,
+            <br />
+            PC &amp; Printer
+            <span className="sr-only"> di Jakarta Timur</span>
+          </motion.h1>
+
+          <motion.p
+            variants={rise}
+            className="mt-6 max-w-[46ch] text-[17px] leading-relaxed text-white/90 md:text-[19px]"
+          >
+            Perbaikan, perawatan, dan pemulihan data dengan teknisi
+            berpengalaman, proses cepat, dan bergaransi {site.guarantee}.
+          </motion.p>
+
+          <motion.ul
+            variants={rise}
+            className="mt-8 flex flex-wrap gap-x-8 gap-y-4"
+          >
+            {badges.map(({ icon: Icon, label, strong }) => (
+              <li key={strong} className="flex items-center gap-3">
+                <span className="flex h-12 w-12 items-center justify-center rounded-full bg-[#123a82] text-[#6aa6ff] ring-1 ring-white/10">
+                  <Icon className="h-5 w-5" aria-hidden="true" />
+                </span>
+                <span className="text-[14px] font-semibold leading-tight text-white">
+                  {label}
+                  <br />
+                  {strong}
+                </span>
+              </li>
+            ))}
+          </motion.ul>
+
+          <motion.div
+            variants={rise}
+            className="mt-10 flex flex-wrap items-center gap-4"
+          >
+            <a
+              href={waDefault}
+              target="_blank"
+              rel="noopener noreferrer"
+              data-cursor="Chat WhatsApp"
+              className="inline-flex items-center gap-3 rounded-xl bg-gradient-to-b from-[#22c55e] to-[#15a34a] px-7 py-4 text-[16px] font-semibold text-white shadow-[0_14px_30px_-12px_rgba(34,197,94,0.85)] transition hover:-translate-y-0.5 hover:brightness-110"
+            >
+              <WhatsAppIcon className="h-6 w-6" />
+              Konsultasi Sekarang
+            </a>
+
+            <Link
+              href="/cek-status"
+              data-cursor="Cek status"
+              className="inline-flex items-center gap-3 rounded-xl border border-white/40 px-7 py-4 text-[16px] font-semibold text-white transition hover:bg-white/10"
+            >
+              <CalendarSearch className="h-5 w-5" aria-hidden="true" />
+              Cek Status Servis
+            </Link>
           </motion.div>
+        </motion.div>
 
-          <div className="mt-auto grid items-end gap-10 pt-16 md:grid-cols-12 md:gap-x-10 md:pt-24">
-            <motion.div
-              style={{ y: headlineY }}
-              className="md:col-span-8"
-              variants={stage}
-              initial="hidden"
-              animate="visible"
-            >
-              <h1 className="font-display text-[clamp(2.9rem,8.2vw,8.1rem)] font-extrabold uppercase leading-[0.82] tracking-[-0.045em] text-chrome">
-                {lines.map((text, index) => (
-                  <span key={text} className="block overflow-hidden pb-[0.05em]">
-                    <motion.span
-                      variants={line}
-                      className={
-                        index === 2 ? "block type-outline" : "block"
-                      }
-                    >
-                      {text}
-                      {index === 2 ? (
-                        <span className="sr-only"> di Jakarta Timur</span>
-                      ) : null}
-                    </motion.span>
-                  </span>
-                ))}
-              </h1>
-            </motion.div>
-
-            <motion.aside
-              style={{ y: panelY }}
-              initial={{ opacity: 0, y: 28 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, ease: ease.out, delay: 0.55 }}
-              className="md:col-span-4 md:pb-2"
-            >
-              <div className="border border-white/12 bg-navy/95 p-6 md:p-7">
-                <p className="text-[13px] font-medium text-dim">Status toko</p>
-
-                <OpenStatus className="mt-3" />
-
-                <dl className="mt-6 space-y-4">
-                  <div>
-                    <dt className="font-display text-[18px] font-semibold text-chrome">
-                      Diagnosa gratis
-                    </dt>
-                    <dd className="mt-1 text-[14px] leading-relaxed text-dim">
-                      Tanpa biaya seperserpun.
-                    </dd>
-                  </div>
-
-                  <div>
-                    <dt className="font-display text-[18px] font-semibold text-chrome">
-                      Garansi {site.guarantee}
-                    </dt>
-                    <dd className="mt-1 text-[14px] leading-relaxed text-dim">
-                      Untuk jasa dan part yang kami pasang.
-                    </dd>
-                  </div>
-                </dl>
-
-                <a
-                  href="#tarif"
-                  data-cursor="Lihat tarif"
-                  className="mt-6 inline-flex items-center gap-2 text-[14px] font-semibold text-chrome transition-colors hover:text-electric-soft"
-                >
-                  Lihat rentang harga
-                  <span aria-hidden="true">→</span>
-                </a>
-              </div>
-            </motion.aside>
+        <motion.div
+          initial={{ opacity: 0, x: 40 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 1, ease: ease.out, delay: 0.25 }}
+          className="relative lg:absolute lg:inset-y-0 lg:right-0 lg:w-[58%]"
+        >
+          <div className="relative aspect-[794/451] w-full overflow-hidden rounded-3xl lg:absolute lg:inset-0 lg:aspect-auto lg:h-full lg:rounded-none [mask-image:linear-gradient(to_right,transparent_0%,#000_28%)] lg:[mask-image:linear-gradient(to_right,transparent_0%,#000_30%)]">
+            <Image
+              src="/images/hero-devices.jpg"
+              alt="Laptop, handphone, PC, dan printer yang kami servis"
+              width={794}
+              height={451}
+              priority
+              sizes="(min-width: 1024px) 58vw, 100vw"
+              className="h-full w-full object-cover object-center lg:object-right"
+            />
           </div>
-
-          <div className="mt-12 grid gap-8 md:mt-16 md:grid-cols-12 md:items-end md:gap-x-10">
-            <motion.p
-              variants={meta}
-              initial="hidden"
-              animate="visible"
-              className="max-w-[52ch] text-[16px] leading-relaxed text-white md:col-span-6 md:text-[18px]"
-            >
-              Servis HP, laptop, PC, dan Printer di Pulo Gebang. Diagnosa Gratis, Harga disepakati
-              sebelum dikerjakan, Proses Perbaikan, Selesai diperbaiki dan garansi{" "}
-              {site.guarantee}.
-            </motion.p>
-
-            <motion.div
-              variants={meta}
-              initial="hidden"
-              animate="visible"
-              className="flex flex-wrap items-center gap-x-8 gap-y-4 md:col-span-6 md:justify-end"
-            >
-              <Magnetic>
-                <ShinyLink
-                  href={waDefault}
-                  tone="chrome"
-                  size="lg"
-                  cursor="Chat WhatsApp"
-                >
-                  Chat WhatsApp
-                </ShinyLink>
-              </Magnetic>
-
-              <a
-                href="#layanan"
-                data-cursor="Lihat layanan"
-                className="text-[15px] font-semibold text-ink underline decoration-ink/40 decoration-2 underline-offset-4 transition-colors hover:decoration-ink"
-              >
-                Lihat layanan
-              </a>
-            </motion.div>
-          </div>
-        </div>
+        </motion.div>
       </div>
+
+      <svg
+        aria-hidden="true"
+        viewBox="0 0 1440 90"
+        preserveAspectRatio="none"
+        className="absolute inset-x-0 bottom-[-1px] h-[56px] w-full text-[#f4f8ff] md:h-[90px]"
+      >
+        <path
+          fill="currentColor"
+          d="M0 62C240 12 520 0 820 18c260 15 440 46 620 22V90H0z"
+        />
+      </svg>
     </Section>
   );
 }

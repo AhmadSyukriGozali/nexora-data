@@ -1,17 +1,25 @@
 "use client";
 
+import { ChevronDown, Menu, X } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion, useMotionValueEvent, useScroll } from "motion/react";
 import { useState, type MouseEvent } from "react";
-import { useChapterTheme, type Chapter } from "@/components/use-chapter-theme";
+import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { cn } from "@/lib/cn";
 import { ease } from "@/lib/motion";
 import { site, waDefault } from "@/lib/site";
 
+const serviceLinks = [
+  { href: "/layanan#laptop", label: "Servis Laptop" },
+  { href: "/layanan#hp", label: "Servis Handphone" },
+  { href: "/layanan#pc", label: "Servis PC / Komputer" },
+  { href: "/layanan#printer", label: "Servis Printer" },
+  { href: "/layanan", label: "Semua layanan" },
+];
+
 const links = [
-  { href: "/layanan", label: "Layanan" },
   { href: "/cek-status", label: "Cek Servis" },
   { href: "/#proses", label: "Proses" },
   { href: "/#tarif", label: "Tarif" },
@@ -19,50 +27,25 @@ const links = [
   { href: "/kontak", label: "Kontak" },
 ];
 
-/** Each chapter gets a bar colour, a button style and a mobile menu panel. */
-const themeClass: Record<
-  Chapter,
-  { bar: string; action: string; panel: string }
-> = {
-  dark: {
-    bar: "bg-navy text-chrome",
-    action: "bg-electric text-white hover:bg-white hover:text-ink",
-    panel: "border-white/12 bg-navy text-chrome",
-  },
-  light: {
-    bar: "bg-paper text-ink",
-    action: "bg-ink text-white hover:bg-electric",
-    panel: "border-ink/10 bg-paper text-ink",
-  },
-  blue: {
-    bar: "bg-electric text-ink",
-    action: "bg-ink text-white hover:bg-navy",
-    panel: "border-ink/10 bg-electric text-ink",
-  },
-};
-
 const navLinkClass =
-  "relative py-2 opacity-80 transition-opacity hover:opacity-100 " +
-  "after:absolute after:inset-x-0 after:-bottom-0.5 after:h-px after:origin-left " + // taste-skill-ignore: penanda halaman aktif, bukan garis pemisah
-  "after:scale-x-0 after:bg-current after:transition-transform after:duration-300 " +
+  "relative py-2 text-white/85 transition-colors hover:text-white " +
+  "after:absolute after:inset-x-0 after:-bottom-0.5 after:h-[2px] after:origin-left " +
+  "after:scale-x-0 after:rounded-full after:bg-[#2f7bff] after:transition-transform after:duration-300 " +
   "hover:after:scale-x-100";
 
-const activeNavLinkClass = "opacity-100 after:scale-x-100";
+const activeNavLinkClass = "text-white after:scale-x-100";
 
-/** Closes the mobile menu after a tap, since <details> keeps its state. */
+/** Menutup menu seluler setelah ketukan, karena <details> menyimpan state-nya. */
 function closeMenu(event: MouseEvent<HTMLAnchorElement>) {
   event.currentTarget.closest("details")?.removeAttribute("open");
 }
 
 export function SiteHeader() {
-  const chapter = useChapterTheme();
   const pathname = usePathname();
-  const theme = themeClass[chapter];
-
   const [hidden, setHidden] = useState(false);
-  const { scrollY, scrollYProgress } = useScroll();
+  const { scrollY } = useScroll();
 
-  // Reading down hides the bar; any upward scroll brings it straight back.
+  // Membaca ke bawah menyembunyikan bar; scroll ke atas langsung memunculkannya.
   useMotionValueEvent(scrollY, "change", (current) => {
     const previous = scrollY.getPrevious() ?? 0;
     setHidden(current > 180 && current > previous);
@@ -72,15 +55,12 @@ export function SiteHeader() {
     <motion.header
       animate={{ y: hidden ? "-100%" : "0%" }}
       transition={{ duration: 0.4, ease: ease.out }}
-      className={cn(
-        "fixed inset-x-0 top-0 z-50 transition-colors duration-300",
-        theme.bar,
-      )}
+      className="fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-[#061836]/95 text-white backdrop-blur-md"
     >
-      <div className="container-page flex h-[76px] items-center justify-between gap-6">
+      <div className="mx-auto flex h-[72px] w-full max-w-[1340px] items-center justify-between gap-6 px-5 md:px-10">
         <Link
           href="/"
-          className="flex items-center gap-3"
+          className="flex shrink-0 items-center gap-3"
           aria-label={`${site.name}, beranda`}
         >
           <Image
@@ -91,15 +71,48 @@ export function SiteHeader() {
             priority
             className="h-9 w-auto"
           />
-          <span className="font-display text-[13px] font-semibold tracking-[0.02em] sm:text-[14px]">
+          <span className="font-display text-[20px] font-semibold tracking-tight">
             Nexora Data
           </span>
         </Link>
 
         <nav
           aria-label="Navigasi utama"
-          className="hidden items-center gap-5 text-[14px] md:flex lg:gap-8 lg:text-[15px]"
+          className="hidden items-center gap-6 text-[15px] font-medium md:flex lg:gap-8"
         >
+          <div className="group relative">
+            <Link
+              href="/layanan"
+              aria-current={pathname === "/layanan" ? "page" : undefined}
+              className={cn(
+                navLinkClass,
+                "inline-flex items-center gap-1",
+                pathname === "/layanan" && activeNavLinkClass,
+              )}
+            >
+              Layanan
+              <ChevronDown
+                aria-hidden="true"
+                className="h-4 w-4 transition-transform duration-300 group-hover:rotate-180 group-focus-within:rotate-180"
+              />
+            </Link>
+
+            <div className="invisible absolute left-1/2 top-full w-[230px] -translate-x-1/2 pt-3 opacity-0 transition-all duration-200 group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100">
+              <ul className="overflow-hidden rounded-2xl border border-white/10 bg-[#0a2248] p-2 shadow-[0_24px_48px_-16px_rgba(0,0,0,0.6)]">
+                {serviceLinks.map((item) => (
+                  <li key={item.href}>
+                    <Link
+                      href={item.href}
+                      className="block rounded-xl px-4 py-2.5 text-[14px] text-white/85 transition-colors hover:bg-white/10 hover:text-white"
+                    >
+                      {item.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+
           {links.map((link) => {
             const active = link.href === pathname;
 
@@ -116,51 +129,44 @@ export function SiteHeader() {
           })}
         </nav>
 
-        <div className="flex items-center gap-1 md:gap-4">
-          <details className="group relative md:hidden">
-            <summary className="cursor-pointer list-none px-3 py-3 text-[14px] font-semibold [&::-webkit-details-marker]:hidden">
-              Menu
+        <div className="flex items-center gap-2 md:gap-4">
+          <a
+            href={waDefault}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-b from-[#22c55e] to-[#15a34a] px-4 py-2.5 text-[14px] font-semibold text-white shadow-[0_8px_20px_-8px_rgba(34,197,94,0.8)] transition hover:brightness-110 sm:px-5"
+          >
+            <WhatsAppIcon className="h-5 w-5" />
+            <span>WhatsApp</span>
+          </a>
+
+          <details className="group/menu relative md:hidden">
+            <summary
+              aria-label="Buka menu"
+              className="flex h-11 w-11 cursor-pointer list-none items-center justify-center rounded-lg border border-white/15 [&::-webkit-details-marker]:hidden"
+            >
+              <Menu className="h-5 w-5 group-open/menu:hidden" aria-hidden="true" />
+              <X className="hidden h-5 w-5 group-open/menu:block" aria-hidden="true" />
             </summary>
 
             <nav
               aria-label="Navigasi seluler"
-              className={cn(
-                "absolute right-0 top-full w-[196px] p-2",
-                theme.panel,
-              )}
+              className="absolute right-0 top-full mt-3 w-[236px] rounded-2xl border border-white/10 bg-[#0a2248] p-2 shadow-[0_24px_48px_-16px_rgba(0,0,0,0.6)]"
             >
-              {links.map((link) => (
+              {[{ href: "/layanan", label: "Layanan" }, ...links].map((link) => (
                 <Link
                   key={link.href}
                   href={link.href}
                   onClick={closeMenu}
-                  className="block px-3 py-3 text-[15px] transition-opacity hover:opacity-70"
+                  className="block rounded-xl px-4 py-3 text-[15px] text-white/90 transition-colors hover:bg-white/10"
                 >
                   {link.label}
                 </Link>
               ))}
             </nav>
           </details>
-
-          <a
-            href={waDefault}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={cn(
-              "px-4 py-3 text-[14px] font-semibold transition-colors sm:px-5",
-              theme.action,
-            )}
-          >
-            WhatsApp
-          </a>
         </div>
       </div>
-
-      <motion.div
-        aria-hidden="true"
-        style={{ scaleX: scrollYProgress }}
-        className="absolute inset-x-0 bottom-0 h-[2px] origin-left bg-current opacity-60"
-      />
     </motion.header>
   );
 }
