@@ -394,3 +394,54 @@ html.js [data-reveal].is-in {
     transform: none;
   }
 }
+
+
+/* ---------------------------------------------------------------------------
+ * Admin dashboard tokens. Names follow the AppDashboardShell reference
+ * (--bjork-*), values are the dark Nexora palette so the unchanged admin
+ * pages (text-chrome, border-white/10) stay readable. Scoped to .nx-block:
+ * the public site is not affected.
+ * ------------------------------------------------------------------------- */
+.nx-block {
+  color-scheme: dark;
+
+  --bjork-bg: #061024;
+  --bjork-panel: #0a1730;
+  --bjork-surface: #0c1932;
+  --bjork-surface-hover: #102140;
+  --bjork-surface-active: #162a52;
+  --bjork-menu: rgba(10, 23, 48, 0.98);
+
+  --bjork-text: #e8edf4;
+  --bjork-text-medium: rgba(232, 237, 244, 0.78);
+  --bjork-text-muted: #93a1b5;
+  --bjork-text-soft: rgba(147, 161, 181, 0.78);
+  --bjork-text-faint: rgba(147, 161, 181, 0.4);
+
+  --bjork-border: rgba(255, 255, 255, 0.1);
+  --bjork-border-strong: rgba(255, 255, 255, 0.2);
+
+  --bjork-accent: #1e5eff;
+  --bjork-accent-soft: rgba(30, 94, 255, 0.16);
+
+  --bjork-shadow-soft: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  --bjork-shadow-surface:
+    inset 0 1px 0 rgba(255, 255, 255, 0.045), 0 14px 20px -12px rgba(0, 0, 0, 0.5);
+
+  --blk-accent-ink: #4f8bff;
+  --blk-accent-fill: #1e5eff;
+  --blk-accent-fill-ink: #ffffff;
+  --blk-success: #a7f3d0;
+  --blk-success-soft: rgba(110, 231, 183, 0.12);
+  --blk-warning: #fde68a;
+  --blk-warning-soft: rgba(252, 211, 77, 0.12);
+  --blk-error: #fecaca;
+  --blk-error-soft: rgba(248, 113, 113, 0.12);
+}
+
+.hide-scrollbar {
+  scrollbar-width: none;
+}
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}

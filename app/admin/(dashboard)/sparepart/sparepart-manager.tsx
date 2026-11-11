@@ -13,7 +13,12 @@ import {
   FormError,
   inputClass,
 } from "@/components/admin/form-controls";
-import { Badge, Card, EmptyState } from "@/components/admin/ui";
+import {
+  Badge,
+  Card,
+  EmptyState,
+  StatStrip,
+} from "@/components/admin/ui";
 import { apiRequest } from "@/lib/admin/client-api";
 import {
   booleanValue,
@@ -43,12 +48,14 @@ export function SparepartManager({
   spareparts,
   movements,
   orders,
+  canManage,
   canDelete,
   canSeeCost,
 }: {
   spareparts: Sparepart[];
   movements: StockMovement[];
   orders: OrderOption[];
+  canManage: boolean;
   canDelete: boolean;
   canSeeCost: boolean;
 }) {
@@ -239,6 +246,39 @@ export function SparepartManager({
 
   return (
     <div className="space-y-5">
+      <StatStrip
+        items={[
+          {
+            label: "Sparepart aktif",
+            value: spareparts.filter((item) => item.is_active).length,
+          },
+          {
+            label: "Stok menipis",
+            value: spareparts.filter(
+              (item) => item.is_active && item.stock_quantity <= item.min_stock,
+            ).length,
+            tone: "danger",
+          },
+          {
+            label: "Total unit",
+            value: spareparts.reduce(
+              (total, item) => total + item.stock_quantity,
+              0,
+            ),
+          },
+          {
+            label: "Nilai jual stok",
+            value: formatRupiah(
+              spareparts.reduce(
+                (total, item) =>
+                  total + item.sell_price * item.stock_quantity,
+                0,
+              ),
+            ),
+            tone: "accent",
+          },
+        ]}
+      />
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex flex-col gap-3 sm:flex-row">
           <input
@@ -259,20 +299,22 @@ export function SparepartManager({
             <option value="inactive">Nonaktif</option>
           </select>
         </div>
-        <button type="button" onClick={openCreate} className={buttonPrimary}>
-          Tambah sparepart
-        </button>
+        {canManage ? (
+          <button type="button" onClick={openCreate} className={buttonPrimary}>
+            Tambah sparepart
+          </button>
+        ) : null}
       </div>
 
-      {showForm ? (
+      {showForm && canManage ? (
         <div id="sparepart-form">
           <Card>
             <div className="mb-4 flex items-center justify-between">
               <div>
-                <h2 className="font-display text-lg font-bold text-chrome">
+                <h2 className="font-display text-lg font-bold text-[color:var(--bjork-text)]">
                   {editing ? `Ubah ${editing.name}` : "Sparepart baru"}
                 </h2>
-                <p className="text-xs text-dim">
+                <p className="text-xs text-[color:var(--bjork-text-muted)]">
                   Stok awal 0. Tambahkan stok lewat form buku stok setelah
                   sparepart dibuat.
                 </p>
@@ -370,12 +412,12 @@ export function SparepartManager({
                   />
                 </Field>
 
-                <label className="flex items-center gap-2 self-end pb-2 text-sm text-chrome">
+                <label className="flex items-center gap-2 self-end pb-2 text-sm text-[color:var(--bjork-text)]">
                   <input
                     name="is_active"
                     type="checkbox"
                     defaultChecked={editing?.is_active ?? true}
-                    className="h-4 w-4 rounded border-white/20 bg-navy-soft accent-electric"
+                    className="h-4 w-4 rounded border-white/20 bg-[var(--bjork-bg)]-soft accent-electric"
                   />
                   Aktif dijual / dipakai
                 </label>
@@ -398,10 +440,10 @@ export function SparepartManager({
           <Card className="border-electric/40">
             <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
               <div>
-                <h2 className="font-display text-lg font-bold text-chrome">
+                <h2 className="font-display text-lg font-bold text-[color:var(--bjork-text)]">
                   Catat stok · {stockTarget.name}
                 </h2>
-                <p className="text-xs text-dim">
+                <p className="text-xs text-[color:var(--bjork-text-muted)]">
                   Stok saat ini {stockTarget.stock_quantity}{" "}
                   {stockTarget.unit}. Perubahan langsung masuk buku stok.
                 </p>
@@ -504,7 +546,7 @@ export function SparepartManager({
         <Card className="p-0">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="text-left text-[11px] uppercase tracking-[0.14em] text-dim">
+              <thead className="text-left text-[11px] uppercase tracking-[0.14em] text-[color:var(--bjork-text-muted)]">
                 <tr>
                   <th className="px-4 py-3 font-semibold">Sparepart</th>
                   <th className="px-4 py-3 font-semibold">Kategori</th>
@@ -520,16 +562,16 @@ export function SparepartManager({
                     sparepart.is_active &&
                     sparepart.stock_quantity <= sparepart.min_stock;
                   return (
-                    <tr key={sparepart.id} className="border-t border-white/8">
+                    <tr key={sparepart.id} className="border-t border-[color:var(--bjork-border)]">
                       <td className="px-4 py-3">
-                        <p className="font-medium text-chrome">
+                        <p className="font-medium text-[color:var(--bjork-text)]">
                           {sparepart.name}
                         </p>
-                        <p className="font-mono text-[11px] text-dim">
+                        <p className="font-mono text-[11px] text-[color:var(--bjork-text-muted)]">
                           {sparepart.sku}
                         </p>
                       </td>
-                      <td className="px-4 py-3 text-dim">
+                      <td className="px-4 py-3 text-[color:var(--bjork-text-muted)]">
                         {sparepart.category ?? "—"}
                       </td>
                       <td className="whitespace-nowrap px-4 py-3">
@@ -537,16 +579,16 @@ export function SparepartManager({
                           className={
                             low
                               ? "font-semibold text-red-200"
-                              : "text-chrome"
+                              : "text-[color:var(--bjork-text)]"
                           }
                         >
                           {sparepart.stock_quantity} {sparepart.unit}
                         </span>
-                        <span className="block text-[11px] text-dim">
+                        <span className="block text-[11px] text-[color:var(--bjork-text-muted)]">
                           min. {sparepart.min_stock}
                         </span>
                       </td>
-                      <td className="whitespace-nowrap px-4 py-3 text-dim">
+                      <td className="whitespace-nowrap px-4 py-3 text-[color:var(--bjork-text-muted)]">
                         {formatRupiah(sparepart.sell_price)}
                       </td>
                       <td className="px-4 py-3">
@@ -556,20 +598,24 @@ export function SparepartManager({
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex justify-end gap-2">
-                          <button
-                            type="button"
-                            className={buttonSmall}
-                            onClick={() => openStock(sparepart)}
-                          >
-                            Catat stok
-                          </button>
-                          <button
-                            type="button"
-                            className={buttonSmall}
-                            onClick={() => openEdit(sparepart)}
-                          >
-                            Ubah
-                          </button>
+                          {canManage ? (
+                            <button
+                              type="button"
+                              className={buttonSmall}
+                              onClick={() => openStock(sparepart)}
+                            >
+                              Catat stok
+                            </button>
+                          ) : null}
+                          {canManage ? (
+                            <button
+                              type="button"
+                              className={buttonSmall}
+                              onClick={() => openEdit(sparepart)}
+                            >
+                              Ubah
+                            </button>
+                          ) : null}
                           {canDelete ? (
                             <button
                               type="button"
@@ -592,12 +638,12 @@ export function SparepartManager({
       )}
 
       <Card className="p-0">
-        <div className="flex flex-col gap-3 border-b border-white/10 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-3 border-b border-[color:var(--bjork-border)] px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h2 className="font-display text-lg font-bold text-chrome">
+            <h2 className="font-display text-lg font-bold text-[color:var(--bjork-text)]">
               Buku stok terbaru
             </h2>
-            <p className="text-xs text-dim">
+            <p className="text-xs text-[color:var(--bjork-text-muted)]">
               200 pergerakan terakhir. Riwayat stok bersifat permanen.
             </p>
           </div>
@@ -616,13 +662,13 @@ export function SparepartManager({
         </div>
 
         {filteredMovements.length === 0 ? (
-          <p className="px-5 py-6 text-sm text-dim">
+          <p className="px-5 py-6 text-sm text-[color:var(--bjork-text-muted)]">
             Belum ada pergerakan stok.
           </p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="text-left text-[11px] uppercase tracking-[0.14em] text-dim">
+              <thead className="text-left text-[11px] uppercase tracking-[0.14em] text-[color:var(--bjork-text-muted)]">
                 <tr>
                   <th className="px-5 py-3 font-semibold">Waktu</th>
                   <th className="px-5 py-3 font-semibold">Sparepart</th>
@@ -640,17 +686,17 @@ export function SparepartManager({
                       ? -movement.quantity
                       : movement.quantity;
                   return (
-                    <tr key={movement.id} className="border-t border-white/8">
-                      <td className="whitespace-nowrap px-5 py-3 text-xs text-dim">
+                    <tr key={movement.id} className="border-t border-[color:var(--bjork-border)]">
+                      <td className="whitespace-nowrap px-5 py-3 text-xs text-[color:var(--bjork-text-muted)]">
                         {formatDateTime(movement.created_at)}
                       </td>
-                      <td className="px-5 py-3 text-chrome">
+                      <td className="px-5 py-3 text-[color:var(--bjork-text)]">
                         {movement.sparepart?.name ?? "—"}
-                        <span className="block font-mono text-[11px] text-dim">
+                        <span className="block font-mono text-[11px] text-[color:var(--bjork-text-muted)]">
                           {movement.sparepart?.sku ?? ""}
                         </span>
                       </td>
-                      <td className="px-5 py-3 text-dim">
+                      <td className="px-5 py-3 text-[color:var(--bjork-text-muted)]">
                         {stockMovementLabels[movement.movement_type]}
                       </td>
                       <td className="whitespace-nowrap px-5 py-3">
@@ -662,13 +708,13 @@ export function SparepartManager({
                           {delta > 0 ? `+${delta}` : delta}
                         </span>
                       </td>
-                      <td className="px-5 py-3 font-mono text-xs text-dim">
+                      <td className="px-5 py-3 font-mono text-xs text-[color:var(--bjork-text-muted)]">
                         {movement.order?.ticket_number ?? "—"}
                       </td>
-                      <td className="max-w-[18rem] px-5 py-3 text-dim">
+                      <td className="max-w-[18rem] px-5 py-3 text-[color:var(--bjork-text-muted)]">
                         {movement.note ?? "—"}
                       </td>
-                      <td className="px-5 py-3 text-xs text-dim">
+                      <td className="px-5 py-3 text-xs text-[color:var(--bjork-text-muted)]">
                         {movement.staff?.full_name || "—"}
                       </td>
                     </tr>

@@ -1,4 +1,4 @@
-import { getStaffSession } from "@/lib/supabase/auth";
+import { getStaffSession, requirePermission } from "@/lib/supabase/auth";
 import { dbErrorResponse, jsonError, jsonOk, parseBody, parseQuery } from "@/lib/supabase/http";
 import { invoiceCreateSchema, invoicesQuerySchema } from "@/lib/supabase/schemas";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -34,6 +34,9 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   const session = await getStaffSession();
   if (!session) return jsonError("Tidak terautentikasi", 401);
+
+  const forbidden = requirePermission(session, "invoices", "manage");
+  if (forbidden) return forbidden;
 
   const body = await parseBody(request, invoiceCreateSchema);
   if ("error" in body) return body.error;

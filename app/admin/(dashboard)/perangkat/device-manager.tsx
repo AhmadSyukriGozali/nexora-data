@@ -13,7 +13,12 @@ import {
   FormError,
   inputClass,
 } from "@/components/admin/form-controls";
-import { Badge, Card, EmptyState } from "@/components/admin/ui";
+import {
+  Badge,
+  Card,
+  EmptyState,
+  StatStrip,
+} from "@/components/admin/ui";
 import { apiRequest } from "@/lib/admin/client-api";
 import { emptyToNull, textValue } from "@/lib/admin/form-utils";
 import { deviceTypeLabels, formatDate } from "@/lib/admin/format";
@@ -28,10 +33,12 @@ const DEVICE_TYPES: DeviceType[] = ["hp", "laptop", "pc", "printer"];
 export function DeviceManager({
   devices,
   customers,
+  canManage,
   canDelete,
 }: {
   devices: Device[];
   customers: CustomerOption[];
+  canManage: boolean;
   canDelete: boolean;
 }) {
   const router = useRouter();
@@ -135,6 +142,25 @@ export function DeviceManager({
 
   return (
     <div className="space-y-5">
+      <StatStrip
+        items={[
+          { label: "Total perangkat", value: devices.length },
+          {
+            label: "Punya serial",
+            value: devices.filter((device) => device.serial_number).length,
+            tone: "accent",
+          },
+          {
+            label: "Pelanggan unik",
+            value: new Set(devices.map((device) => device.customer_id)).size,
+          },
+          {
+            label: "Tanpa serial",
+            value: devices.filter((device) => !device.serial_number).length,
+            tone: "warning",
+          },
+        ]}
+      />
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex flex-col gap-3 sm:flex-row">
           <input
@@ -158,16 +184,18 @@ export function DeviceManager({
             ))}
           </select>
         </div>
-        <button type="button" onClick={openCreate} className={buttonPrimary}>
-          Tambah perangkat
-        </button>
+        {canManage ? (
+          <button type="button" onClick={openCreate} className={buttonPrimary}>
+            Tambah perangkat
+          </button>
+        ) : null}
       </div>
 
-      {showForm ? (
+      {showForm && canManage ? (
         <div id="device-form">
           <Card>
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="font-display text-lg font-bold text-chrome">
+              <h2 className="font-display text-lg font-bold text-[color:var(--bjork-text)]">
                 {editing ? "Ubah perangkat" : "Perangkat baru"}
               </h2>
               <button
@@ -276,7 +304,7 @@ export function DeviceManager({
         <Card className="p-0">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="text-left text-[11px] uppercase tracking-[0.14em] text-dim">
+              <thead className="text-left text-[11px] uppercase tracking-[0.14em] text-[color:var(--bjork-text-muted)]">
                 <tr>
                   <th className="px-4 py-3 font-semibold">Perangkat</th>
                   <th className="px-4 py-3 font-semibold">Jenis</th>
@@ -288,13 +316,13 @@ export function DeviceManager({
               </thead>
               <tbody>
                 {filtered.map((device) => (
-                  <tr key={device.id} className="border-t border-white/8">
+                  <tr key={device.id} className="border-t border-[color:var(--bjork-border)]">
                     <td className="px-4 py-3">
-                      <p className="font-medium text-chrome">
+                      <p className="font-medium text-[color:var(--bjork-text)]">
                         {device.brand} {device.model}
                       </p>
                       {device.notes ? (
-                        <p className="max-w-[18rem] truncate text-xs text-dim">
+                        <p className="max-w-[18rem] truncate text-xs text-[color:var(--bjork-text-muted)]">
                           {device.notes}
                         </p>
                       ) : null}
@@ -302,24 +330,26 @@ export function DeviceManager({
                     <td className="px-4 py-3">
                       <Badge>{deviceTypeLabels[device.device_type]}</Badge>
                     </td>
-                    <td className="px-4 py-3 text-dim">
+                    <td className="px-4 py-3 text-[color:var(--bjork-text-muted)]">
                       {device.customer?.full_name ?? "—"}
                     </td>
-                    <td className="px-4 py-3 font-mono text-xs text-dim">
+                    <td className="px-4 py-3 font-mono text-xs text-[color:var(--bjork-text-muted)]">
                       {device.serial_number ?? "—"}
                     </td>
-                    <td className="whitespace-nowrap px-4 py-3 text-xs text-dim">
+                    <td className="whitespace-nowrap px-4 py-3 text-xs text-[color:var(--bjork-text-muted)]">
                       {formatDate(device.created_at)}
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex justify-end gap-2">
-                        <button
-                          type="button"
-                          className={buttonSmall}
-                          onClick={() => openEdit(device)}
-                        >
-                          Ubah
-                        </button>
+                        {canManage ? (
+                          <button
+                            type="button"
+                            className={buttonSmall}
+                            onClick={() => openEdit(device)}
+                          >
+                            Ubah
+                          </button>
+                        ) : null}
                         {canDelete ? (
                           <button
                             type="button"

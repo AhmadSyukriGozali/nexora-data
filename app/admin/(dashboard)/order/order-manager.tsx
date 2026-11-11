@@ -18,6 +18,7 @@ import {
   Card,
   EmptyState,
   ServiceStatusBadge,
+  StatStrip,
 } from "@/components/admin/ui";
 import { apiRequest } from "@/lib/admin/client-api";
 import {
@@ -45,11 +46,13 @@ export function OrderManager({
   orders,
   customers,
   devices,
+  canManage,
   canDelete,
 }: {
   orders: Order[];
   customers: CustomerOption[];
   devices: Device[];
+  canManage: boolean;
   canDelete: boolean;
 }) {
   const router = useRouter();
@@ -148,6 +151,33 @@ export function OrderManager({
 
   return (
     <div className="space-y-5">
+      <StatStrip
+        items={[
+          { label: "Total order", value: orders.length },
+          {
+            label: "Aktif",
+            value: orders.filter(
+              (order) =>
+                !["selesai", "diambil", "batal"].includes(order.status),
+            ).length,
+            tone: "accent",
+          },
+          {
+            label: "Perlu persetujuan",
+            value: orders.filter(
+              (order) => order.status === "menunggu_persetujuan",
+            ).length,
+            tone: "warning",
+          },
+          {
+            label: "Estimasi biaya",
+            value: formatRupiah(
+              orders.reduce((total, order) => total + order.total_amount, 0),
+            ),
+            hint: "Dari order terbaru",
+          },
+        ]}
+      />
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex flex-col gap-3 sm:flex-row">
           <input
@@ -171,20 +201,22 @@ export function OrderManager({
             ))}
           </select>
         </div>
-        <button type="button" onClick={openCreate} className={buttonPrimary}>
-          Order baru
-        </button>
+        {canManage ? (
+          <button type="button" onClick={openCreate} className={buttonPrimary}>
+            Order baru
+          </button>
+        ) : null}
       </div>
 
-      {showForm ? (
+      {showForm && canManage ? (
         <div id="order-form">
           <Card>
             <div className="mb-4 flex items-center justify-between">
               <div>
-                <h2 className="font-display text-lg font-bold text-chrome">
+                <h2 className="font-display text-lg font-bold text-[color:var(--bjork-text)]">
                   Order servis baru
                 </h2>
-                <p className="text-xs text-dim">
+                <p className="text-xs text-[color:var(--bjork-text-muted)]">
                   Nomor tiket dibuat otomatis oleh database.
                 </p>
               </div>
@@ -322,7 +354,7 @@ export function OrderManager({
         <Card className="p-0">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="text-left text-[11px] uppercase tracking-[0.14em] text-dim">
+              <thead className="text-left text-[11px] uppercase tracking-[0.14em] text-[color:var(--bjork-text-muted)]">
                 <tr>
                   <th className="px-4 py-3 font-semibold">Tiket</th>
                   <th className="px-4 py-3 font-semibold">Pelanggan</th>
@@ -336,27 +368,27 @@ export function OrderManager({
               </thead>
               <tbody>
                 {filtered.map((order) => (
-                  <tr key={order.id} className="border-t border-white/8">
+                  <tr key={order.id} className="border-t border-[color:var(--bjork-border)]">
                     <td className="whitespace-nowrap px-4 py-3">
                       <Link
                         href={`/admin/order/${order.id}`}
-                        className="font-mono text-xs text-electric-soft hover:text-chrome"
+                        className="font-mono text-xs text-[color:var(--blk-accent-ink)] hover:text-[color:var(--bjork-text)]"
                       >
                         {order.ticket_number}
                       </Link>
                     </td>
                     <td className="px-4 py-3">
-                      <p className="text-chrome">
+                      <p className="text-[color:var(--bjork-text)]">
                         {order.customer?.full_name ?? "—"}
                       </p>
-                      <p className="text-xs text-dim">
+                      <p className="text-xs text-[color:var(--bjork-text-muted)]">
                         {order.customer?.phone ?? ""}
                       </p>
                     </td>
-                    <td className="px-4 py-3 text-dim">
+                    <td className="px-4 py-3 text-[color:var(--bjork-text-muted)]">
                       {order.device ? (
                         <>
-                          <span className="block text-chrome">
+                          <span className="block text-[color:var(--bjork-text)]">
                             {order.device.brand} {order.device.model}
                           </span>
                           <span className="text-xs">
@@ -370,13 +402,13 @@ export function OrderManager({
                     <td className="px-4 py-3">
                       <ServiceStatusBadge status={order.status} />
                     </td>
-                    <td className="whitespace-nowrap px-4 py-3 text-dim">
+                    <td className="whitespace-nowrap px-4 py-3 text-[color:var(--bjork-text-muted)]">
                       {formatRupiah(order.total_amount)}
                     </td>
-                    <td className="whitespace-nowrap px-4 py-3 text-xs text-dim">
+                    <td className="whitespace-nowrap px-4 py-3 text-xs text-[color:var(--bjork-text-muted)]">
                       {formatDateTime(order.estimated_finish_at)}
                     </td>
-                    <td className="whitespace-nowrap px-4 py-3 text-xs text-dim">
+                    <td className="whitespace-nowrap px-4 py-3 text-xs text-[color:var(--bjork-text-muted)]">
                       {formatDateTime(order.created_at)}
                     </td>
                     <td className="px-4 py-3">
@@ -407,7 +439,7 @@ export function OrderManager({
         </Card>
       )}
 
-      <p className="text-xs text-dim">
+      <p className="text-xs text-[color:var(--bjork-text-muted)]">
         Menampilkan maksimal 200 order terbaru. Gunakan pencarian atau filter
         status untuk mempersempit data.
       </p>

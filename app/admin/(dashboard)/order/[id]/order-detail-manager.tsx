@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 
+import { ConfirmDialog } from "@/components/admin/confirm-dialog";
 import {
   buttonDanger,
   buttonPrimary,
@@ -11,44 +12,49 @@ import {
   FormError,
   inputClass,
 } from "@/components/admin/form-controls";
-import { Card } from "@/components/admin/ui";
+import { Card, ServiceStatusBadge } from "@/components/admin/ui";
 import { apiRequest } from "@/lib/admin/client-api";
-import {
-  emptyToNull,
-  numberValue,
-  textValue,
-} from "@/lib/admin/form-utils";
+import { emptyToNull, numberValue, textValue } from "@/lib/admin/form-utils";
 import {
   fromJakartaInput,
   serviceStatusLabels,
   toJakartaInput,
 } from "@/lib/admin/format";
+import { ORDER_SEQUENCE, nextOrderStatuses } from "@/lib/admin/status-flow";
 import type { Order, ServiceStatus } from "@/lib/admin/types";
-
-const STATUSES = Object.keys(serviceStatusLabels) as ServiceStatus[];
+import { cn } from "@/lib/cn";
 
 export function OrderDetailManager({
   order,
+  canManage,
   canDelete,
+  canCancel,
   hasInvoice,
 }: {
   order: Order;
+  canManage: boolean;
   canDelete: boolean;
+  canCancel: boolean;
   hasInvoice: boolean;
 }) {
   const router = useRouter();
-  const [nextStatus, setNextStatus] = useState<"" | ServiceStatus>("");
+  const [target, setTarget] = useState<ServiceStatus | null>(null);
   const [statusNote, setStatusNote] = useState("");
   const [statusError, setStatusError] = useState<string | null>(null);
   const [statusBusy, setStatusBusy] = useState(false);
 
   const [editError, setEditError] = useState<string | null>(null);
   const [editBusy, setEditBusy] = useState(false);
-
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteBusy, setDeleteBusy] = useState(false);
 
-  async function handleStatus(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  const options = nextOrderStatuses(order.status);
+  const forward = options.filter((status) => status !== "batal");
+  const cancellable = options.includes("batal");
+  const seqIndex = ORDER_SEQUENCE.indexOf(order.status);
+
+  async function handleStatus() {
+    if (!target) return;
     setStatusError(null);
     setStatusBusy(true);
 
@@ -57,7 +63,7 @@ export function OrderDetailManager({
       {
         method: "POST",
         body: JSON.stringify({
-          status: nextStatus,
+          status: target,
           note: emptyToNull(statusNote),
         }),
       },
@@ -70,7 +76,7 @@ export function OrderDetailManager({
       return;
     }
 
-    setNextStatus("");
+    setTarget(null);
     setStatusNote("");
     router.refresh();
   }
@@ -106,12 +112,6 @@ export function OrderDetailManager({
   }
 
   async function handleDelete() {
-    const warning = hasInvoice
-      ? `Order ${order.ticket_number} sudah punya invoice. Hapus invoice dulu. Lanjutkan?`
-      : `Hapus order ${order.ticket_number}? Riwayat status juga akan hilang.`;
-
-    if (!window.confirm(warning)) return;
-
     setDeleteBusy(true);
     const result = await apiRequest<{ deleted: boolean }>(
       `/api/admin/orders/${order.id}`,
@@ -120,7 +120,8 @@ export function OrderDetailManager({
     setDeleteBusy(false);
 
     if (!result.ok) {
-      window.alert(result.message);
+      setStatusError(result.message);
+      setDeleteOpen(false);
       return;
     }
 
@@ -129,39 +130,232 @@ export function OrderDetailManager({
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <Card>
-        <h2 className="font-display text-lg font-bold text-chrome">
-          Ubah status
-        </h2>
-        <p className="text-xs text-dim">
-          Status saat ini: {serviceStatusLabels[order.status]}. Perubahan akan
-          dicatat di riwayat.
-        </p>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h2 className="text-[13.5px] font-semibold">Alur status</h2>
+          <ServiceStatusBadge status={order.status} />
+        </div>
 
-        <form onSubmit={handleStatus} className="mt-4 space-y-4">
-          <Field label="Status baru">
-            <select
-              className={inputClass}
-              required
-              value={nextStatus}
-              onChange={(event) =>
-                setNextStatus(event.target.value as "" | ServiceStatus)
-              }
-            >
-              <option value="" disabled>
-                Pilih status
-              </option>
-              {STATUSES.filter((status) => status !== order.status).map(
-                (status) => (
-                  <option key={status} value={status}>
+        <ol className="mt-4 space-y-0">
+          {ORDER_SEQUENCE.map((status, index) => {
+            const done = seqIndex >= 0 && index < seqIndex;
+            const current = order.status === status;
+            const isLast = index === ORDER_SEQUENCE.length - 1;
+            return (
+              <li key={status} className="flex gap-3">
+                <span className="flex flex-col items-center">
+                  <span
+                    aria-hidden="true"
+                    className={cn(
+                      "grid size-5 shrink-0 place-items-center rounded-full border text-[9px] font-bold",
+                      done
+                        ? "border-[var(--color-live)] bg-[var(--blk-success-soft)] text-[color:var(--blk-success)]"
+                        : current
+                          ? "border-[color:var(--bjork-accent)] bg-[var(--blk-accent-fill)] text-[color:var(--blk-accent-fill-ink)]"
+                          : "border-[color:var(--bjork-border-strong)] text-[color:var(--bjork-text-faint)]",
+                    )}
+                  >
+                    {done ? "✓" : index + 1}
+                  </span>
+                  {!isLast ? (
+                    <span
+                      aria-hidden="true"
+                      className={cn(
+                        "w-px flex-1 bg-[var(--bjork-border)]",
+                        done && "bg-[var(--color-live)]/50",
+                      )}
+                    />
+                  ) : null}
+                </span>
+                <span className={cn("min-w-0", !isLast && "pb-3.5")}>
+                  <span
+                    className={cn(
+                      "block text-[13px] leading-tight",
+                      current
+                        ? "font-semibold text-[color:var(--bjork-text)]"
+                        : "text-[color:var(--bjork-text-muted)]",
+                    )}
+                  >
                     {serviceStatusLabels[status]}
-                  </option>
-                ),
-              )}
-            </select>
-          </Field>
+                  </span>
+                  {current ? (
+                    <span className="text-[11px] text-[color:var(--blk-accent-ink)]">
+                      Status saat ini
+                    </span>
+                  ) : null}
+                </span>
+              </li>
+            );
+          })}
+        </ol>
 
+        {order.status === "menunggu_sparepart" ? (
+          <p className="mt-3 rounded-lg border border-[color:var(--blk-warning)]/35 bg-[var(--blk-warning-soft)] px-3 py-2 text-[12px] text-[color:var(--blk-warning)]">
+            Menunggu sparepart. Lanjutkan ke Dikerjakan setelah part tersedia.
+          </p>
+        ) : null}
+        {order.status === "batal" ? (
+          <p className="mt-3 rounded-lg border border-[var(--blk-error)]/35 bg-[var(--blk-error-soft)] px-3 py-2 text-[12px] text-[color:var(--blk-error)]">
+            Order dibatalkan. Status tidak bisa diubah lagi.
+          </p>
+        ) : null}
+
+        {canManage && forward.length > 0 ? (
+          <div className="mt-4 space-y-2 border-t border-[color:var(--bjork-border)] pt-4">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[color:var(--bjork-text-muted)]">
+              Langkah berikutnya
+            </p>
+            <FormActions>
+              {forward.map((status) => (
+                <button
+                  key={status}
+                  type="button"
+                  onClick={() => {
+                    setStatusError(null);
+                    setTarget(status);
+                  }}
+                  className={buttonPrimary}
+                >
+                  {serviceStatusLabels[status]}
+                </button>
+              ))}
+            </FormActions>
+          </div>
+        ) : null}
+
+        {canManage && canCancel && cancellable ? (
+          <button
+            type="button"
+            className={`${buttonDanger} mt-3`}
+            onClick={() => {
+              setStatusError(null);
+              setTarget("batal");
+            }}
+          >
+            Batalkan order
+          </button>
+        ) : null}
+
+        <FormError message={statusError} />
+        {!canManage ? (
+          <p className="mt-3 text-[12px] text-[color:var(--bjork-text-muted)]">
+            Anda hanya bisa melihat order ini. Minta owner memberi izin kelola
+            order servis untuk mengubah status.
+          </p>
+        ) : null}
+      </Card>
+
+      {canManage ? (
+        <Card>
+          <h2 className="text-[13.5px] font-semibold">Ubah detail order</h2>
+          <p className="mt-0.5 text-[12px] text-[color:var(--bjork-text-muted)]">
+            Perbarui keluhan, diagnosa, estimasi selesai, dan biaya.
+          </p>
+
+          <form onSubmit={handleEdit} className="mt-4 space-y-4">
+            <Field label="Keluhan">
+              <textarea
+                name="complaint"
+                className={inputClass}
+                rows={3}
+                required
+                minLength={3}
+                maxLength={2000}
+                defaultValue={order.complaint}
+              />
+            </Field>
+
+            <Field label="Diagnosa">
+              <textarea
+                name="diagnosis"
+                className={inputClass}
+                rows={3}
+                maxLength={2000}
+                defaultValue={order.diagnosis ?? ""}
+              />
+            </Field>
+
+            <Field label="Estimasi selesai">
+              <input
+                name="estimated_finish_at"
+                type="datetime-local"
+                className={inputClass}
+                defaultValue={toJakartaInput(order.estimated_finish_at)}
+              />
+            </Field>
+
+            <Field label="Estimasi biaya (Rp)">
+              <input
+                name="total_amount"
+                type="number"
+                min={0}
+                step={1000}
+                className={inputClass}
+                defaultValue={order.total_amount}
+              />
+            </Field>
+
+            <FormError message={editError} />
+
+            <FormActions>
+              <button
+                type="submit"
+                disabled={editBusy}
+                className={buttonPrimary}
+              >
+                {editBusy ? "Menyimpan…" : "Simpan detail"}
+              </button>
+            </FormActions>
+          </form>
+        </Card>
+      ) : null}
+
+      {canDelete ? (
+        <Card>
+          <h2 className="text-[13.5px] font-semibold">Zona berbahaya</h2>
+          <p className="mt-1 text-[12px] text-[color:var(--bjork-text-muted)]">
+            Hapus order hanya jika dibuat salah. Order dengan invoice tidak bisa
+            dihapus sebelum invoicenya dihapus.
+          </p>
+          <button
+            type="button"
+            onClick={() => setDeleteOpen(true)}
+            disabled={deleteBusy}
+            className={`${buttonDanger} mt-4`}
+          >
+            Hapus order
+          </button>
+        </Card>
+      ) : null}
+
+      <ConfirmDialog
+        open={target !== null}
+        title={
+          target === "batal"
+            ? "Batalkan order?"
+            : `Ubah ke ${target ? serviceStatusLabels[target] : ""}?`
+        }
+        description={
+          target === "batal"
+            ? "Order yang dibatalkan tidak bisa dilanjutkan lagi. Riwayat tetap tersimpan."
+            : "Status hanya bisa maju sesuai urutan. Perubahan dicatat di riwayat."
+        }
+        confirmLabel={
+          target === "batal"
+            ? "Ya, batalkan"
+            : `Ya, ubah ke ${target ? serviceStatusLabels[target] : ""}`
+        }
+        tone={target === "batal" ? "danger" : "default"}
+        busy={statusBusy}
+        onClose={() => {
+          if (statusBusy) return;
+          setTarget(null);
+          setStatusNote("");
+        }}
+        onConfirm={handleStatus}
+      >
+        {target !== "batal" ? (
           <Field label="Catatan (opsional)">
             <textarea
               className={inputClass}
@@ -172,101 +366,31 @@ export function OrderDetailManager({
               placeholder="Contoh: pelanggan setuju biaya perbaikan."
             />
           </Field>
-
-          <FormError message={statusError} />
-
-          <FormActions>
-            <button
-              type="submit"
-              disabled={statusBusy || !nextStatus}
-              className={buttonPrimary}
-            >
-              {statusBusy ? "Menyimpan…" : "Simpan status"}
-            </button>
-          </FormActions>
-        </form>
-      </Card>
-
-      <Card>
-        <h2 className="font-display text-lg font-bold text-chrome">
-          Ubah detail order
-        </h2>
-        <p className="text-xs text-dim">
-          Perbarui keluhan, diagnosa, estimasi selesai, dan biaya.
-        </p>
-
-        <form onSubmit={handleEdit} className="mt-4 space-y-4">
-          <Field label="Keluhan">
-            <textarea
-              name="complaint"
-              className={inputClass}
-              rows={3}
-              required
-              minLength={3}
-              maxLength={2000}
-              defaultValue={order.complaint}
-            />
-          </Field>
-
-          <Field label="Diagnosa">
-            <textarea
-              name="diagnosis"
-              className={inputClass}
-              rows={3}
-              maxLength={2000}
-              defaultValue={order.diagnosis ?? ""}
-            />
-          </Field>
-
-          <Field label="Estimasi selesai">
-            <input
-              name="estimated_finish_at"
-              type="datetime-local"
-              className={inputClass}
-              defaultValue={toJakartaInput(order.estimated_finish_at)}
-            />
-          </Field>
-
-          <Field label="Estimasi biaya (Rp)">
-            <input
-              name="total_amount"
-              type="number"
-              min={0}
-              step={1000}
-              className={inputClass}
-              defaultValue={order.total_amount}
-            />
-          </Field>
-
-          <FormError message={editError} />
-
-          <FormActions>
-            <button type="submit" disabled={editBusy} className={buttonPrimary}>
-              {editBusy ? "Menyimpan…" : "Simpan detail"}
-            </button>
-          </FormActions>
-        </form>
-      </Card>
-
-      {canDelete ? (
-        <Card>
-          <h2 className="font-display text-lg font-bold text-chrome">
-            Zona berbahaya
-          </h2>
-          <p className="mt-1 text-xs text-dim">
-            Hapus order hanya jika dibuat salah. Order dengan invoice tidak bisa
-            dihapus sebelum invoicenya dihapus.
-          </p>
-          <button
-            type="button"
-            onClick={handleDelete}
-            disabled={deleteBusy}
-            className={`${buttonDanger} mt-4`}
+        ) : null}
+        {statusError ? (
+          <p
+            role="alert"
+            className="mt-3 rounded-lg border border-[var(--blk-error)]/40 bg-[var(--blk-error-soft)] px-3 py-2 text-[12px] text-[color:var(--blk-error)]"
           >
-            {deleteBusy ? "Menghapus…" : "Hapus order"}
-          </button>
-        </Card>
-      ) : null}
+            {statusError}
+          </p>
+        ) : null}
+      </ConfirmDialog>
+
+      <ConfirmDialog
+        open={deleteOpen}
+        title={`Hapus order ${order.ticket_number}?`}
+        description={
+          hasInvoice
+            ? "Order ini sudah punya invoice. Hapus invoice dulu sebelum menghapus order."
+            : "Riwayat status ikut terhapus. Tindakan ini tidak bisa dibatalkan."
+        }
+        confirmLabel="Hapus permanen"
+        tone="danger"
+        busy={deleteBusy}
+        onClose={() => setDeleteOpen(false)}
+        onConfirm={handleDelete}
+      />
     </div>
   );
 }

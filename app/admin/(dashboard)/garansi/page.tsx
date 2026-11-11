@@ -1,6 +1,7 @@
 import { PageHeader } from "@/components/admin/ui";
+import { can } from "@/lib/admin/access";
+import { requireStaffPage } from "@/lib/admin/guard";
 import type { OrderOption, Warranty } from "@/lib/admin/types";
-import { getStaffSession } from "@/lib/supabase/auth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 import { WarrantyManager } from "./warranty-manager";
@@ -10,7 +11,7 @@ export const instant = false;
 export const metadata = { title: "Garansi" };
 
 export default async function WarrantiesPage() {
-  const session = await getStaffSession();
+  const session = await requireStaffPage("warranties");
   const supabase = await createSupabaseServerClient();
 
   const [warrantiesResult, ordersResult] = await Promise.all([
@@ -46,7 +47,8 @@ export default async function WarrantiesPage() {
       <WarrantyManager
         warranties={warranties}
         availableOrders={availableOrders}
-        canDelete={session?.role === "owner"}
+        canManage={can(session.permissions, "warranties", "manage")}
+        canDelete={can(session.permissions, "warranties", "delete")}
       />
     </>
   );

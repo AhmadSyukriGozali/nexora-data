@@ -1,6 +1,7 @@
 import { PageHeader } from "@/components/admin/ui";
+import { can } from "@/lib/admin/access";
+import { requireStaffPage } from "@/lib/admin/guard";
 import type { CustomerOption, Device, Order } from "@/lib/admin/types";
-import { getStaffSession } from "@/lib/supabase/auth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 import { OrderManager } from "./order-manager";
@@ -10,7 +11,7 @@ export const instant = false;
 export const metadata = { title: "Order Servis" };
 
 export default async function OrdersPage() {
-  const session = await getStaffSession();
+  const session = await requireStaffPage("orders");
   const supabase = await createSupabaseServerClient();
 
   const [ordersResult, customersResult, devicesResult] = await Promise.all([
@@ -45,7 +46,8 @@ export default async function OrdersPage() {
         orders={(ordersResult.data ?? []) as Order[]}
         customers={(customersResult.data ?? []) as CustomerOption[]}
         devices={(devicesResult.data ?? []) as Device[]}
-        canDelete={session?.role === "owner"}
+        canManage={can(session.permissions, "orders", "manage")}
+        canDelete={can(session.permissions, "orders", "delete")}
       />
     </>
   );

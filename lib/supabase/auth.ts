@@ -1,5 +1,16 @@
 import { NextResponse } from "next/server";
 
+import {
+  EMPTY_PERMISSIONS,
+  FULL_PERMISSIONS,
+  can,
+  rowsToPermissions,
+  type Module,
+  type PermissionAction,
+  type PermissionRow,
+  type Permissions,
+} from "@/lib/admin/access";
+
 import { jsonError } from "./http";
 import { createSupabaseServerClient } from "./server";
 
@@ -10,6 +21,7 @@ export type StaffSession = {
   email: string | null;
   role: StaffRole;
   fullName: string;
+  permissions: Permissions;
 };
 
 type ProfileRow = {
@@ -40,11 +52,28 @@ export async function getStaffSession(): Promise<StaffSession | null> {
   const role = data.role;
   if (role !== "owner" && role !== "admin") return null;
 
+  let permissions = EMPTY_PERMISSIONS;
+  if (role === "owner") {
+    permissions = FULL_PERMISSIONS;
+  } else {
+    const { data: rows, error: permError } = await supabase
+      .from("staff_permissions")
+      .select("module, can_view, can_manage, can_delete, can_view_cost")
+      .eq("profile_id", user.id);
+
+    // Tabel bisa belum ada bila migrasi 006 belum dijalankan. Jangan kunci
+    // semua staf keluar karena urutan deploy; fallback ke akses lama.
+    permissions = permError
+      ? FULL_PERMISSIONS
+      : rowsToPermissions((rows ?? []) as PermissionRow[]);
+  }
+
   return {
     userId: user.id,
     email: user.email ?? null,
     role,
     fullName: data.full_name ?? "",
+    permissions,
   };
 }
 
@@ -58,4 +87,14 @@ export function ownerOnly(session: StaffSession): NextResponse | null {
 
 export function isOwner(session: StaffSession): boolean {
   return session.role === "owner";
+}
+
+/** Mengembalikan respons 403 bila izin modul tidak cukup. */
+export function requirePermission(
+  session: StaffSession,
+  module: Module,
+  action: PermissionAction = "view",
+): NextResponse | null {
+  if (can(session.permissions, module, action)) return null;
+  return jsonError("Anda tidak punya akses ke aksi ini.", 403);
 }

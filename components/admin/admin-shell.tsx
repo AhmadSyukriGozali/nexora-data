@@ -1,24 +1,90 @@
 "use client";
 
+import {
+  Bell,
+  FileText,
+  LayoutDashboard,
+  LogOut,
+  Menu,
+  MessageSquareQuote,
+  Package,
+  PanelLeftClose,
+  PanelLeftOpen,
+  Smartphone,
+  ShieldCheck,
+  Users,
+  UsersRound,
+  Wrench,
+  X,
+} from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useState, type ReactNode } from "react";
+import {
+  useEffect,
+  useState,
+  type ComponentType,
+  type ReactNode,
+  type SVGProps,
+} from "react";
 
-import { cn } from "@/lib/cn";
+import {
+  BlockDrawer,
+  IconButton,
+  InitialsAvatar,
+  blockRoot,
+  focusRing,
+} from "@/components/ui/app-dashboard-shell-utils/app-block-kit";
+import { type Module, type Permissions } from "@/lib/admin/access";
 import type { StaffRole } from "@/lib/admin/types";
+import { cn } from "@/lib/cn";
 
-type NavItem = { href: string; label: string; ownerOnly?: boolean };
+type NavItem = {
+  href: string;
+  label: string;
+  icon: ComponentType<SVGProps<SVGSVGElement>>;
+  module: Module | "staff";
+  ownerOnly?: boolean;
+  badge?: "orders" | "testimonials";
+};
 
-const NAV: NavItem[] = [
-  { href: "/admin", label: "Ringkasan" },
-  { href: "/admin/order", label: "Order Servis" },
-  { href: "/admin/pelanggan", label: "Pelanggan" },
-  { href: "/admin/perangkat", label: "Perangkat" },
-  { href: "/admin/invoice", label: "Invoice" },
-  { href: "/admin/sparepart", label: "Sparepart" },
-  { href: "/admin/garansi", label: "Garansi" },
-  { href: "/admin/testimoni", label: "Testimoni" },
-  { href: "/admin/staf", label: "Staf", ownerOnly: true },
+type NavGroup = { label?: string; items: NavItem[] };
+
+const NAV: NavGroup[] = [
+  {
+    items: [
+      { href: "/admin", label: "Ringkasan", icon: LayoutDashboard, module: "dashboard" },
+      { href: "/admin/order", label: "Order Servis", icon: Wrench, module: "orders", badge: "orders" },
+      { href: "/admin/pelanggan", label: "Pelanggan", icon: Users, module: "customers" },
+      { href: "/admin/perangkat", label: "Perangkat", icon: Smartphone, module: "devices" },
+    ],
+  },
+  {
+    label: "Keuangan & stok",
+    items: [
+      { href: "/admin/invoice", label: "Invoice", icon: FileText, module: "invoices" },
+      { href: "/admin/sparepart", label: "Sparepart", icon: Package, module: "spareparts" },
+      { href: "/admin/garansi", label: "Garansi", icon: ShieldCheck, module: "warranties" },
+    ],
+  },
+  {
+    label: "Lainnya",
+    items: [
+      {
+        href: "/admin/testimoni",
+        label: "Testimoni",
+        icon: MessageSquareQuote,
+        module: "testimonials",
+        badge: "testimonials",
+      },
+      {
+        href: "/admin/staf",
+        label: "Staf",
+        icon: UsersRound,
+        module: "staff",
+        ownerOnly: true,
+      },
+    ],
+  },
 ];
 
 function isActive(pathname: string, href: string): boolean {
@@ -26,67 +92,250 @@ function isActive(pathname: string, href: string): boolean {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-function NavLinks({
-  onNavigate,
-  isOwner,
-}: {
-  onNavigate?: () => void;
-  isOwner: boolean;
-}) {
-  const pathname = usePathname();
+type ShellUser = { fullName: string; email: string | null; role: StaffRole };
 
+type Badges = { orders?: number; testimonials?: number };
+
+function Brand({ collapsed }: { collapsed: boolean }) {
   return (
-    <nav className="flex flex-col gap-1">
-      {NAV.filter((item) => !item.ownerOnly || isOwner).map((item) => {
-        const active = isActive(pathname, item.href);
-        return (
-          <Link
-            key={item.href}
-            href={item.href}
-            onClick={onNavigate}
-            className={cn(
-              "rounded-lg px-3 py-2 text-sm font-medium transition-colors",
-              active
-                ? "bg-electric/15 text-electric-soft"
-                : "text-dim hover:bg-white/5 hover:text-chrome",
-            )}
-          >
-            {item.label}
-          </Link>
-        );
-      })}
-    </nav>
+    <Link
+      href="/admin"
+      aria-label="Nexora, Panel Admin"
+      className={cn(
+        "flex min-w-0 items-center gap-2.5 rounded-[10px] p-1.5 transition-colors duration-150 hover:bg-[var(--bjork-surface-hover)]",
+        focusRing,
+      )}
+    >
+      <span
+        aria-hidden="true"
+        className="grid size-8 shrink-0 place-items-center rounded-[9px] bg-[var(--blk-accent-fill)] font-display text-[12px] font-bold text-[color:var(--blk-accent-fill-ink)] shadow-[inset_0_1px_0_rgba(255,255,255,0.28),0_1px_2px_rgba(0,0,0,0.2)]"
+      >
+        NX
+      </span>
+      {!collapsed && (
+        <span className="min-w-0">
+          <span className="block truncate font-display text-[13px] font-bold leading-tight tracking-[0.18em]">
+            NEXORA
+          </span>
+          <span className="block truncate text-[11px] leading-tight text-[color:var(--bjork-text-muted)]">
+            Panel Admin
+          </span>
+        </span>
+      )}
+    </Link>
   );
 }
 
-function Brand() {
+function badgeValue(
+  item: NavItem,
+  badges: Badges | undefined,
+): number | null {
+  if (!item.badge || !badges) return null;
+  const value = badges[item.badge] ?? 0;
+  return value > 0 ? value : null;
+}
+
+function SidebarContent({
+  mode,
+  collapsed,
+  user,
+  permissions,
+  badges,
+  pathname,
+  onNavigate,
+  onToggleCollapsed,
+  onClose,
+  onLogout,
+  loggingOut,
+}: {
+  mode: "rail" | "drawer";
+  collapsed: boolean;
+  user: ShellUser;
+  permissions: Permissions;
+  badges?: Badges;
+  pathname: string;
+  onNavigate: () => void;
+  onToggleCollapsed: () => void;
+  onClose: () => void;
+  onLogout: () => void;
+  loggingOut: boolean;
+}) {
+  const isOwner = user.role === "owner";
+  const groups = NAV.map((group) => ({
+    ...group,
+    items: group.items.filter((item) =>
+      item.ownerOnly
+        ? isOwner
+        : item.module !== "staff" && permissions[item.module]?.view === true,
+    ),
+  })).filter((group) => group.items.length > 0);
+  const displayName = user.fullName || user.email || "Staf";
+
   return (
-    <Link href="/admin" className="flex items-center gap-3 px-3 py-1">
-      <span className="grid h-9 w-9 place-items-center rounded-lg bg-electric font-display text-sm font-bold text-white">
-        NX
-      </span>
-      <span>
-        <span className="block font-display text-sm font-bold tracking-[0.18em] text-chrome">
-          NEXORA
-        </span>
-        <span className="block text-[11px] uppercase tracking-[0.2em] text-dim">
-          Panel Admin
-        </span>
-      </span>
-    </Link>
+    <>
+      <div
+        className={cn(
+          "flex h-14 shrink-0 items-center gap-2 border-b border-[color:var(--bjork-border)]",
+          collapsed ? "justify-center px-2" : "px-3",
+        )}
+      >
+        <Brand collapsed={collapsed} />
+        {mode === "drawer" && (
+          <IconButton label="Tutup menu" size="sm" className="ml-auto" onClick={onClose}>
+            <X />
+          </IconButton>
+        )}
+      </div>
+
+      <nav
+        aria-label="Menu admin"
+        className={cn(
+          "hide-scrollbar flex-1 overflow-y-auto py-3",
+          collapsed ? "px-2" : "px-2.5",
+        )}
+      >
+        {groups.map((group, gi) => (
+          <div key={group.label ?? gi} className={cn(gi > 0 && "mt-5")}>
+            {group.label &&
+              (collapsed ? (
+                <div aria-hidden="true" className="mx-auto mb-2 h-px w-6 bg-[var(--bjork-border)]" />
+              ) : (
+                <h2 className="mb-1.5 px-2.5 font-mono text-[10.5px] uppercase tracking-[0.1em] text-[color:var(--bjork-text-soft)]">
+                  {group.label}
+                </h2>
+              ))}
+            <ul className="flex flex-col gap-0.5">
+              {group.items.map((item) => {
+                const active = isActive(pathname, item.href);
+                const Icon = item.icon;
+                const count = badgeValue(item, badges);
+                return (
+                  <li key={item.href}>
+                    <Link
+                      href={item.href}
+                      onClick={onNavigate}
+                      aria-current={active ? "page" : undefined}
+                      title={collapsed ? item.label : undefined}
+                      className={cn(
+                        "group relative flex h-9 items-center gap-2.5 rounded-[9px] text-[13.5px] transition-colors duration-150",
+                        collapsed ? "justify-center px-0" : "px-2.5",
+                        active
+                          ? "bg-[var(--bjork-surface)] font-medium text-[color:var(--bjork-text)] shadow-[var(--bjork-shadow-soft),0_0_0_1px_var(--bjork-border)]"
+                          : "text-[color:var(--bjork-text-medium)] hover:bg-[var(--bjork-surface-hover)] hover:text-[color:var(--bjork-text)]",
+                        focusRing,
+                      )}
+                    >
+                      {active && (
+                        <span
+                          aria-hidden="true"
+                          className="absolute -left-2.5 top-2 h-5 w-[3px] rounded-r-full bg-[var(--bjork-accent)]"
+                        />
+                      )}
+                      <Icon
+                        aria-hidden="true"
+                        className={cn(
+                          "size-[17px] shrink-0",
+                          active
+                            ? "text-[color:var(--blk-accent-ink)]"
+                            : "text-[color:var(--bjork-text-muted)] group-hover:text-[color:var(--bjork-text-medium)]",
+                        )}
+                      />
+                      {collapsed ? (
+                        <span className="sr-only">{item.label}</span>
+                      ) : (
+                        <span className="min-w-0 flex-1 truncate">{item.label}</span>
+                      )}
+                      {!collapsed && count !== null ? (
+                        <span className="shrink-0 rounded-full border border-[color:var(--bjork-border)] bg-[var(--bjork-panel)] px-1.5 text-[10.5px] font-semibold tabular-nums text-[color:var(--bjork-text-muted)]">
+                          {count}
+                        </span>
+                      ) : null}
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        ))}
+      </nav>
+
+      <div
+        className={cn(
+          "shrink-0 border-t border-[color:var(--bjork-border)] p-2.5",
+          collapsed && "px-2",
+        )}
+      >
+        <div
+          className={cn("flex items-center gap-2.5 p-1.5", collapsed && "justify-center")}
+          title={collapsed ? displayName : undefined}
+        >
+          <InitialsAvatar name={displayName} size={28} />
+          {!collapsed && (
+            <span className="min-w-0 flex-1">
+              <span className="block truncate text-[12.5px] font-medium leading-tight">
+                {displayName}
+              </span>
+              <span className="block truncate text-[11.5px] leading-tight text-[color:var(--bjork-text-muted)]">
+                {isOwner ? "Owner" : "Admin"}
+                {user.email ? ` · ${user.email}` : ""}
+              </span>
+            </span>
+          )}
+        </div>
+        <div className={cn("mt-1 flex items-center gap-1", collapsed && "flex-col")}>
+          <IconButton
+            label={loggingOut ? "Keluar…" : "Keluar"}
+            size="sm"
+            onClick={onLogout}
+            disabled={loggingOut}
+            className="hover:text-[color:var(--blk-error)]"
+          >
+            <LogOut />
+          </IconButton>
+          {mode === "rail" && (
+            <IconButton
+              label={collapsed ? "Perluas sidebar" : "Ciutkan sidebar"}
+              size="sm"
+              onClick={onToggleCollapsed}
+              aria-expanded={!collapsed}
+              className="ml-auto max-lg:hidden"
+            >
+              {collapsed ? <PanelLeftOpen /> : <PanelLeftClose />}
+            </IconButton>
+          )}
+        </div>
+      </div>
+    </>
   );
 }
 
 export function AdminShell({
   user,
+  permissions,
+  badges,
+  today,
   children,
 }: {
-  user: { fullName: string; email: string | null; role: StaffRole };
+  user: ShellUser;
+  permissions: Permissions;
+  badges?: Badges;
+  today: string;
   children: ReactNode;
 }) {
   const router = useRouter();
-  const [open, setOpen] = useState(false);
+  const pathname = usePathname();
+  const [collapsed, setCollapsed] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
+
+  useEffect(() => {
+    const query = window.matchMedia("(min-width: 1024px)");
+    const onChange = () => {
+      if (query.matches) setDrawerOpen(false);
+    };
+    query.addEventListener("change", onChange);
+    return () => query.removeEventListener("change", onChange);
+  }, []);
 
   async function handleLogout() {
     setLoggingOut(true);
@@ -98,89 +347,116 @@ export function AdminShell({
     }
   }
 
-  const userBlock = (
-    <div className="mt-auto border-t border-white/10 px-3 pt-4">
-      <p className="truncate text-sm font-semibold text-chrome">
-        {user.fullName || user.email || "Staf"}
-      </p>
-      <p className="truncate text-xs text-dim">{user.email}</p>
-      <span className="mt-1 inline-flex rounded-full border border-white/15 px-2 py-0.5 text-[10px] uppercase tracking-[0.16em] text-dim">
-        {user.role === "owner" ? "Owner" : "Admin"}
-      </span>
-      <button
-        type="button"
-        onClick={handleLogout}
-        disabled={loggingOut}
-        className="mt-3 mb-4 w-full rounded-lg border border-white/15 px-3 py-2 text-left text-sm text-dim transition-colors hover:border-red-400/40 hover:text-red-200 disabled:opacity-50"
-      >
-        {loggingOut ? "Keluar…" : "Keluar"}
-      </button>
-    </div>
+  const isOwner = user.role === "owner";
+  const visibleNav = NAV.flatMap((group) => group.items).filter((item) =>
+    item.ownerOnly
+      ? isOwner
+      : item.module !== "staff" && permissions[item.module]?.view === true,
+  );
+  const currentLabel =
+    visibleNav.find((item) => isActive(pathname, item.href))?.label ??
+    "Panel Admin";
+  const displayName = user.fullName || user.email || "Staf";
+  const pending = badges?.orders ?? 0;
+
+  const sidebar = (mode: "rail" | "drawer") => (
+    <SidebarContent
+      mode={mode}
+      collapsed={mode === "rail" && collapsed}
+      user={user}
+      permissions={permissions}
+      badges={badges}
+      pathname={pathname}
+      onNavigate={() => setDrawerOpen(false)}
+      onToggleCollapsed={() => setCollapsed((value) => !value)}
+      onClose={() => setDrawerOpen(false)}
+      onLogout={handleLogout}
+      loggingOut={loggingOut}
+    />
   );
 
   return (
-    <div className="fixed inset-0 z-[110] flex bg-navy text-chrome">
-      <aside className="hidden w-64 shrink-0 flex-col border-r border-white/10 bg-navy-soft py-5 lg:flex">
-        <Brand />
-        <div className="mt-7 flex-1 overflow-y-auto px-2">
-          <NavLinks isOwner={user.role === "owner"} />
-        </div>
-        {userBlock}
-      </aside>
-
-      {open ? (
-        <button
-          type="button"
-          aria-label="Tutup menu"
-          onClick={() => setOpen(false)}
-          className="fixed inset-0 z-10 bg-black/60 lg:hidden"
-        />
-      ) : null}
-
+    <div className={cn(blockRoot, "fixed inset-0 z-[110]")}>
       <aside
+        aria-label="Navigasi utama"
         className={cn(
-          "fixed inset-y-0 left-0 z-20 flex w-72 flex-col border-r border-white/10 bg-navy-soft py-5 transition-transform duration-200 lg:hidden",
-          open ? "translate-x-0" : "-translate-x-full",
+          "relative z-20 hidden h-full shrink-0 flex-col border-r border-[color:var(--bjork-border)] bg-[var(--bjork-panel)] transition-[width] duration-[260ms] ease-[cubic-bezier(0.32,0.72,0,1)] motion-reduce:transition-none lg:flex",
+          collapsed ? "w-[64px]" : "w-[244px]",
         )}
       >
-        <Brand />
-        <div className="mt-7 flex-1 overflow-y-auto px-2">
-          <NavLinks
-            onNavigate={() => setOpen(false)}
-            isOwner={user.role === "owner"}
-          />
-        </div>
-        {userBlock}
+        {sidebar("rail")}
       </aside>
 
-      <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex h-16 shrink-0 items-center justify-between gap-4 border-b border-white/10 bg-navy/80 px-4 backdrop-blur lg:px-8">
-          <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={() => setOpen(true)}
-              className="rounded-lg border border-white/15 px-3 py-1.5 text-sm lg:hidden"
-              aria-label="Buka menu"
+      <div className="flex min-w-0 flex-1 flex-col" inert={drawerOpen}>
+        <header className="relative z-10 flex h-14 shrink-0 items-center gap-2 border-b border-[color:var(--bjork-border)] bg-[var(--bjork-bg)]/85 px-3 backdrop-blur lg:px-5">
+          <IconButton
+            label="Buka menu"
+            onClick={() => setDrawerOpen(true)}
+            aria-expanded={drawerOpen}
+            className="lg:hidden"
+          >
+            <Menu />
+          </IconButton>
+          <nav aria-label="Breadcrumb" className="min-w-0">
+            <ol className="flex min-w-0 items-center gap-1.5 text-[13px]">
+              <li className="hidden truncate text-[color:var(--bjork-text-muted)] sm:block">
+                Nexora Data
+              </li>
+              <li aria-hidden="true" className="hidden text-[color:var(--bjork-text-faint)] sm:block">
+                /
+              </li>
+              <li
+                aria-current="page"
+                className="truncate font-medium text-[color:var(--bjork-text)]"
+              >
+                {currentLabel}
+              </li>
+            </ol>
+          </nav>
+
+          <span className="ml-auto hidden text-[11.5px] text-[color:var(--bjork-text-muted)] xl:block">
+            {today}
+          </span>
+
+          {pending > 0 ? (
+            <Link
+              href="/admin/order"
+              className={cn(
+                "relative grid size-8 place-items-center rounded-[9px] text-[color:var(--bjork-text-muted)] transition-colors hover:bg-[var(--bjork-surface-hover)] hover:text-[color:var(--bjork-text)]",
+                focusRing,
+              )}
+              aria-label={`${pending} order perlu ditangani`}
             >
-              Menu
-            </button>
-            <span className="font-display text-sm font-semibold tracking-wide text-dim">
-              Dashboard Operasional
-            </span>
-          </div>
-          <div className="flex items-center gap-3 text-xs text-dim">
-            <span className="hidden sm:inline">
-              {user.role === "owner" ? "Owner" : "Admin"}
-            </span>
-            <span className="grid h-8 w-8 place-items-center rounded-full border border-white/15 bg-white/5 text-xs font-semibold text-chrome">
-              {(user.fullName || user.email || "N").slice(0, 1).toUpperCase()}
-            </span>
-          </div>
+              <Bell className="size-[17px]" aria-hidden="true" />
+              <span className="absolute right-1 top-1 grid min-w-3.5 place-items-center rounded-full bg-[var(--blk-error)] px-1 text-[9px] font-bold text-[#1b0b0b]">
+                {pending > 99 ? "99+" : pending}
+              </span>
+            </Link>
+          ) : null}
+
+          <span className="hidden rounded-full border border-[color:var(--bjork-border)] px-2.5 py-0.5 text-[11px] text-[color:var(--bjork-text-muted)] sm:inline">
+            {isOwner ? "Owner" : "Admin"}
+          </span>
+          <InitialsAvatar name={displayName} size={28} />
         </header>
 
-        <main className="flex-1 overflow-y-auto px-4 py-6 lg:px-8 lg:py-8">
-          <div className="mx-auto w-full max-w-7xl space-y-6">{children}</div>
+        <main className="@container/main relative min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-6 lg:px-8 lg:py-8">
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-x-0 top-0 h-[320px] bg-[radial-gradient(60%_100%_at_70%_0%,rgba(30,94,255,0.14),transparent_70%)]"
+          />
+          <div className="relative mx-auto w-full max-w-7xl space-y-6">{children}</div>
         </main>
+      </div>
+
+      <div className="lg:hidden">
+        <BlockDrawer
+          open={drawerOpen}
+          onClose={() => setDrawerOpen(false)}
+          label="Menu admin"
+        >
+          {sidebar("drawer")}
+        </BlockDrawer>
       </div>
     </div>
   );

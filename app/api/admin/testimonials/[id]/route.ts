@@ -1,4 +1,4 @@
-import { getStaffSession, ownerOnly } from "@/lib/supabase/auth";
+import { getStaffSession, requirePermission } from "@/lib/supabase/auth";
 import { dbErrorResponse, jsonError, jsonOk, parseBody } from "@/lib/supabase/http";
 import { testimonialModerationSchema, uuidParamSchema } from "@/lib/supabase/schemas";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -13,6 +13,9 @@ const moderationBodySchema = z.strictObject({
 export async function PATCH(request: Request, context: Context) {
   const session = await getStaffSession();
   if (!session) return jsonError("Tidak terautentikasi", 401);
+
+  const forbidden = requirePermission(session, "testimonials", "manage");
+  if (forbidden) return forbidden;
 
   const rawId = await context.params;
   const parsedId = uuidParamSchema.safeParse(rawId.id);
@@ -44,7 +47,7 @@ export async function DELETE(_request: Request, context: Context) {
   const session = await getStaffSession();
   if (!session) return jsonError("Tidak terautentikasi", 401);
 
-  const forbidden = ownerOnly(session);
+  const forbidden = requirePermission(session, "testimonials", "delete");
   if (forbidden) return forbidden;
 
   const rawId = await context.params;

@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import { OrderStatusChecker } from "@/components/order-status-checker";
 import { Reveal } from "@/components/reveal";
+import { TestimonialForm } from "@/components/testimonial-form";
 import { ButtonLink } from "@/components/ui/button-link";
 import { Section } from "@/components/ui/section";
 import { site, waDefault } from "@/lib/site";
@@ -163,6 +164,43 @@ export default function CekStatusPage() {
                 untuk detailnya.
               </p>
             </div>
+          </Reveal>
+        </div>
+      </Section>
+
+      <Section tone="navy" className="section-pad">
+        <div className="container-page grid gap-12 md:grid-cols-12 md:gap-x-14">
+          <div className="md:col-span-5">
+            <Reveal>
+              <p className="text-[13px] font-semibold uppercase tracking-[0.2em] text-electric-soft">
+                Testimoni
+              </p>
+            </Reveal>
+
+            <Reveal delay={60}>
+              <h2 className="mt-4 font-display text-[clamp(1.8rem,3.4vw,3rem)] font-semibold tracking-[-0.02em] text-chrome">
+                Ceritakan pengalaman servis Anda
+              </h2>
+            </Reveal>
+
+            <Reveal delay={120}>
+              <p className="mt-5 max-w-[46ch] text-[16px] leading-relaxed text-dim">
+                Ulasan Anda membantu pelanggan lain memilih tempat servis. Admin
+                memeriksa setiap testimoni sebelum tayang di halaman depan.
+              </p>
+            </Reveal>
+
+            <Reveal delay={180}>
+              <ul className="mt-8 space-y-3 border-l-2 border-electric pl-5 text-[14px] leading-relaxed text-dim">
+                <li>Nama tampil disingkat, misalnya “Budi S.”.</li>
+                <li>Nomor HP tidak pernah dipublikasikan.</li>
+                <li>Hanya testimoni yang disetujui yang tampil.</li>
+              </ul>
+            </Reveal>
+          </div>
+
+          <Reveal delay={140} className="md:col-span-7">
+            <TestimonialForm />
           </Reveal>
         </div>
       </Section>

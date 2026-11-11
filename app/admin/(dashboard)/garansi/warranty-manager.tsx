@@ -13,7 +13,12 @@ import {
   FormError,
   inputClass,
 } from "@/components/admin/form-controls";
-import { Badge, Card, EmptyState } from "@/components/admin/ui";
+import {
+  Badge,
+  Card,
+  EmptyState,
+  StatStrip,
+} from "@/components/admin/ui";
 import { apiRequest } from "@/lib/admin/client-api";
 import {
   emptyToNull,
@@ -41,10 +46,12 @@ function daysRemaining(expiresAt: string): number {
 export function WarrantyManager({
   warranties,
   availableOrders,
+  canManage,
   canDelete,
 }: {
   warranties: Warranty[];
   availableOrders: OrderOption[];
+  canManage: boolean;
   canDelete: boolean;
 }) {
   const router = useRouter();
@@ -158,6 +165,30 @@ export function WarrantyManager({
 
   return (
     <div className="space-y-5">
+      <StatStrip
+        items={[
+          { label: "Total garansi", value: warranties.length },
+          {
+            label: "Masih aktif",
+            value: warranties.filter((warranty) =>
+              isWarrantyActive(warranty.expires_at),
+            ).length,
+            tone: "success",
+          },
+          {
+            label: "Kedaluwarsa",
+            value: warranties.filter(
+              (warranty) => !isWarrantyActive(warranty.expires_at),
+            ).length,
+            tone: "danger",
+          },
+          {
+            label: "Order belum bergaransi",
+            value: availableOrders.length,
+            hint: "Siap dibuatkan garansi",
+          },
+        ]}
+      />
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex flex-col gap-3 sm:flex-row">
           <input
@@ -178,14 +209,16 @@ export function WarrantyManager({
             <option value="expired">Kedaluwarsa</option>
           </select>
         </div>
-        <button
-          type="button"
-          onClick={openCreate}
-          className={buttonPrimary}
-          disabled={availableOrders.length === 0}
-        >
-          Tambah garansi
-        </button>
+        {canManage ? (
+          <button
+            type="button"
+            onClick={openCreate}
+            className={buttonPrimary}
+            disabled={availableOrders.length === 0}
+          >
+            Tambah garansi
+          </button>
+        ) : null}
       </div>
 
       {availableOrders.length === 0 ? (
@@ -195,15 +228,15 @@ export function WarrantyManager({
         </p>
       ) : null}
 
-      {showForm ? (
+      {showForm && canManage ? (
         <div id="warranty-form">
           <Card>
             <div className="mb-4 flex items-center justify-between">
               <div>
-                <h2 className="font-display text-lg font-bold text-chrome">
+                <h2 className="font-display text-lg font-bold text-[color:var(--bjork-text)]">
                   {editing ? "Ubah garansi" : "Garansi baru"}
                 </h2>
-                <p className="text-xs text-dim">
+                <p className="text-xs text-[color:var(--bjork-text-muted)]">
                   Tanggal berakhir = tanggal mulai + durasi hari.
                 </p>
               </div>
@@ -320,7 +353,7 @@ export function WarrantyManager({
         <Card className="p-0">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="text-left text-[11px] uppercase tracking-[0.14em] text-dim">
+              <thead className="text-left text-[11px] uppercase tracking-[0.14em] text-[color:var(--bjork-text-muted)]">
                 <tr>
                   <th className="px-4 py-3 font-semibold">Order</th>
                   <th className="px-4 py-3 font-semibold">Pelanggan</th>
@@ -337,20 +370,20 @@ export function WarrantyManager({
                   const active = isWarrantyActive(warranty.expires_at);
                   const remaining = daysRemaining(warranty.expires_at);
                   return (
-                    <tr key={warranty.id} className="border-t border-white/8">
-                      <td className="whitespace-nowrap px-4 py-3 font-mono text-xs text-electric-soft">
+                    <tr key={warranty.id} className="border-t border-[color:var(--bjork-border)]">
+                      <td className="whitespace-nowrap px-4 py-3 font-mono text-xs text-[color:var(--blk-accent-ink)]">
                         {warranty.order?.ticket_number ?? "—"}
                       </td>
-                      <td className="px-4 py-3 text-chrome">
+                      <td className="px-4 py-3 text-[color:var(--bjork-text)]">
                         {warranty.order?.customer?.full_name ?? "—"}
                       </td>
-                      <td className="whitespace-nowrap px-4 py-3 text-dim">
+                      <td className="whitespace-nowrap px-4 py-3 text-[color:var(--bjork-text-muted)]">
                         {warranty.duration_days} hari
                       </td>
-                      <td className="whitespace-nowrap px-4 py-3 text-xs text-dim">
+                      <td className="whitespace-nowrap px-4 py-3 text-xs text-[color:var(--bjork-text-muted)]">
                         {formatDateTime(warranty.starts_at)}
                       </td>
-                      <td className="whitespace-nowrap px-4 py-3 text-xs text-dim">
+                      <td className="whitespace-nowrap px-4 py-3 text-xs text-[color:var(--bjork-text-muted)]">
                         {formatDateTime(warranty.expires_at)}
                       </td>
                       <td className="whitespace-nowrap px-4 py-3">
@@ -358,23 +391,25 @@ export function WarrantyManager({
                           {active ? "Aktif" : "Kedaluwarsa"}
                         </Badge>
                         {active ? (
-                          <span className="mt-1 block text-[11px] text-dim">
+                          <span className="mt-1 block text-[11px] text-[color:var(--bjork-text-muted)]">
                             sisa {Math.max(remaining, 0)} hari
                           </span>
                         ) : null}
                       </td>
-                      <td className="max-w-[16rem] px-4 py-3 text-dim">
+                      <td className="max-w-[16rem] px-4 py-3 text-[color:var(--bjork-text-muted)]">
                         {warranty.terms ?? "—"}
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex justify-end gap-2">
-                          <button
-                            type="button"
-                            className={buttonSmall}
-                            onClick={() => openEdit(warranty)}
-                          >
-                            Ubah
-                          </button>
+                          {canManage ? (
+                            <button
+                              type="button"
+                              className={buttonSmall}
+                              onClick={() => openEdit(warranty)}
+                            >
+                              Ubah
+                            </button>
+                          ) : null}
                           {canDelete ? (
                             <button
                               type="button"

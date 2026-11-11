@@ -1,10 +1,12 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { buttonGhost, buttonPrimary } from "@/components/admin/form-controls";
 import { InvoiceStatusBadge, PageHeader } from "@/components/admin/ui";
+import { can } from "@/lib/admin/access";
 import { formatDateTime } from "@/lib/admin/format";
+import { requireStaffPage } from "@/lib/admin/guard";
 import type { InvoiceDetail, Sparepart } from "@/lib/admin/types";
-import { getStaffSession } from "@/lib/supabase/auth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 import { InvoiceDetailManager } from "./invoice-detail-manager";
@@ -17,7 +19,7 @@ type Context = { params: Promise<{ id: string }> };
 
 export default async function InvoiceDetailPage({ params }: Context) {
   const { id } = await params;
-  const session = await getStaffSession();
+  const session = await requireStaffPage("invoices");
   const supabase = await createSupabaseServerClient();
 
   const { data } = await supabase
@@ -47,6 +49,7 @@ export default async function InvoiceDetailPage({ params }: Context) {
   return (
     <>
       <PageHeader
+        eyebrow="Invoice"
         title={invoice.invoice_number}
         description={`Diterbitkan ${formatDateTime(invoice.issued_at)}${
           invoice.order?.ticket_number
@@ -55,16 +58,10 @@ export default async function InvoiceDetailPage({ params }: Context) {
         }${invoice.order?.customer?.full_name ? ` · ${invoice.order.customer.full_name}` : ""}`}
       >
         <InvoiceStatusBadge status={invoice.status} />
-        <Link
-          href="/admin/invoice"
-          className="rounded-lg border border-white/15 px-4 py-2 text-sm font-medium text-chrome transition-colors hover:border-white/40"
-        >
+        <Link href="/admin/invoice" className={buttonGhost}>
           Kembali
         </Link>
-        <Link
-          href={orderHref}
-          className="rounded-lg bg-electric px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-electric-soft"
-        >
+        <Link href={orderHref} className={buttonPrimary}>
           Lihat order
         </Link>
       </PageHeader>
@@ -72,7 +69,9 @@ export default async function InvoiceDetailPage({ params }: Context) {
       <InvoiceDetailManager
         invoice={invoice}
         spareparts={(spareparts ?? []) as Sparepart[]}
-        canDelete={session?.role === "owner"}
+        canManage={can(session.permissions, "invoices", "manage")}
+        canDelete={can(session.permissions, "invoices", "delete")}
+        canDeletePayments={session.role === "owner"}
       />
     </>
   );

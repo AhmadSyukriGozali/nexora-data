@@ -13,7 +13,7 @@ import {
   FormError,
   inputClass,
 } from "@/components/admin/form-controls";
-import { Card, EmptyState } from "@/components/admin/ui";
+import { Card, EmptyState, StatStrip } from "@/components/admin/ui";
 import { apiRequest } from "@/lib/admin/client-api";
 import { emptyToNull, textValue } from "@/lib/admin/form-utils";
 import { formatDate } from "@/lib/admin/format";
@@ -21,9 +21,11 @@ import type { Customer } from "@/lib/admin/types";
 
 export function CustomerManager({
   customers,
+  canManage,
   canDelete,
 }: {
   customers: Customer[];
+  canManage: boolean;
   canDelete: boolean;
 }) {
   const router = useRouter();
@@ -119,6 +121,25 @@ export function CustomerManager({
 
   return (
     <div className="space-y-5">
+      <StatStrip
+        items={[
+          { label: "Total pelanggan", value: customers.length },
+          {
+            label: "Ada email",
+            value: customers.filter((customer) => customer.email).length,
+            tone: "accent",
+          },
+          {
+            label: "Ada alamat",
+            value: customers.filter((customer) => customer.address).length,
+          },
+          {
+            label: "Tanpa email",
+            value: customers.filter((customer) => !customer.email).length,
+            tone: "warning",
+          },
+        ]}
+      />
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <input
           className={`${inputClass} sm:max-w-sm`}
@@ -126,16 +147,18 @@ export function CustomerManager({
           value={search}
           onChange={(event) => setSearch(event.target.value)}
         />
-        <button type="button" onClick={openCreate} className={buttonPrimary}>
-          Tambah pelanggan
-        </button>
+        {canManage ? (
+          <button type="button" onClick={openCreate} className={buttonPrimary}>
+            Tambah pelanggan
+          </button>
+        ) : null}
       </div>
 
-      {showForm ? (
+      {showForm && canManage ? (
         <div id="customer-form">
           <Card>
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="font-display text-lg font-bold text-chrome">
+              <h2 className="font-display text-lg font-bold text-[color:var(--bjork-text)]">
                 {editing ? `Ubah ${editing.full_name}` : "Pelanggan baru"}
               </h2>
               <button
@@ -221,7 +244,7 @@ export function CustomerManager({
         <Card className="p-0">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="text-left text-[11px] uppercase tracking-[0.14em] text-dim">
+              <thead className="text-left text-[11px] uppercase tracking-[0.14em] text-[color:var(--bjork-text-muted)]">
                 <tr>
                   <th className="px-4 py-3 font-semibold">Pelanggan</th>
                   <th className="px-4 py-3 font-semibold">Nomor HP</th>
@@ -232,31 +255,33 @@ export function CustomerManager({
               </thead>
               <tbody>
                 {filtered.map((customer) => (
-                  <tr key={customer.id} className="border-t border-white/8">
+                  <tr key={customer.id} className="border-t border-[color:var(--bjork-border)]">
                     <td className="px-4 py-3">
-                      <p className="font-medium text-chrome">{customer.full_name}</p>
+                      <p className="font-medium text-[color:var(--bjork-text)]">{customer.full_name}</p>
                       {customer.email ? (
-                        <p className="text-xs text-dim">{customer.email}</p>
+                        <p className="text-xs text-[color:var(--bjork-text-muted)]">{customer.email}</p>
                       ) : null}
                     </td>
-                    <td className="whitespace-nowrap px-4 py-3 text-dim">
+                    <td className="whitespace-nowrap px-4 py-3 text-[color:var(--bjork-text-muted)]">
                       {customer.phone}
                     </td>
-                    <td className="max-w-[16rem] truncate px-4 py-3 text-dim">
+                    <td className="max-w-[16rem] truncate px-4 py-3 text-[color:var(--bjork-text-muted)]">
                       {customer.address ?? "—"}
                     </td>
-                    <td className="whitespace-nowrap px-4 py-3 text-xs text-dim">
+                    <td className="whitespace-nowrap px-4 py-3 text-xs text-[color:var(--bjork-text-muted)]">
                       {formatDate(customer.created_at)}
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex justify-end gap-2">
-                        <button
-                          type="button"
-                          className={buttonSmall}
-                          onClick={() => openEdit(customer)}
-                        >
-                          Ubah
-                        </button>
+                        {canManage ? (
+                          <button
+                            type="button"
+                            className={buttonSmall}
+                            onClick={() => openEdit(customer)}
+                          >
+                            Ubah
+                          </button>
+                        ) : null}
                         {canDelete ? (
                           <button
                             type="button"
@@ -278,8 +303,8 @@ export function CustomerManager({
       )}
 
       {!canDelete ? (
-        <p className="text-xs text-dim">
-          Hapus data pelanggan hanya tersedia untuk owner.
+        <p className="text-xs text-[color:var(--bjork-text-muted)]">
+          Menghapus pelanggan butuh izin hapus dari owner.
         </p>
       ) : null}
     </div>

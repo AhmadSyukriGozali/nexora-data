@@ -146,6 +146,10 @@ export type StaffMember = {
   role: StaffRole;
   is_active: boolean;
   created_at: string;
+  email_confirmed_at?: string | null;
+  invited_at?: string | null;
+  last_sign_in_at?: string | null;
+  permissions?: import("./access").PermissionRow[];
 };
 
 export type StockMovement = {

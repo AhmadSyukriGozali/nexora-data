@@ -1,4 +1,4 @@
-import { getStaffSession, ownerOnly } from "@/lib/supabase/auth";
+import { getStaffSession, requirePermission } from "@/lib/supabase/auth";
 import { dbErrorResponse, jsonError, jsonOk, parseBody } from "@/lib/supabase/http";
 import { uuidParamSchema, warrantyUpdateSchema } from "@/lib/supabase/schemas";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -31,6 +31,9 @@ export async function PATCH(request: Request, context: Context) {
   const session = await getStaffSession();
   if (!session) return jsonError("Tidak terautentikasi", 401);
 
+  const forbidden = requirePermission(session, "warranties", "manage");
+  if (forbidden) return forbidden;
+
   const rawId = await context.params;
   const parsedId = uuidParamSchema.safeParse(rawId.id);
   if (!parsedId.success) return jsonError("ID tidak valid", 422);
@@ -60,7 +63,7 @@ export async function DELETE(_request: Request, context: Context) {
   const session = await getStaffSession();
   if (!session) return jsonError("Tidak terautentikasi", 401);
 
-  const forbidden = ownerOnly(session);
+  const forbidden = requirePermission(session, "warranties", "delete");
   if (forbidden) return forbidden;
 
   const rawId = await context.params;

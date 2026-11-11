@@ -1,19 +1,21 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { buttonGhost, buttonPrimary } from "@/components/admin/form-controls";
 import {
   Card,
   PageHeader,
   ServiceStatusBadge,
 } from "@/components/admin/ui";
+import { can } from "@/lib/admin/access";
 import {
   deviceTypeLabels,
   formatDateTime,
   formatRupiah,
   serviceStatusLabels,
 } from "@/lib/admin/format";
+import { requireStaffPage } from "@/lib/admin/guard";
 import type { Order, OrderHistory } from "@/lib/admin/types";
-import { getStaffSession } from "@/lib/supabase/auth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 import { OrderDetailManager } from "./order-detail-manager";
@@ -26,7 +28,7 @@ type Context = { params: Promise<{ id: string }> };
 
 export default async function OrderDetailPage({ params }: Context) {
   const { id } = await params;
-  const session = await getStaffSession();
+  const session = await requireStaffPage("orders");
   const supabase = await createSupabaseServerClient();
 
   const { data: orderData } = await supabase
@@ -63,62 +65,58 @@ export default async function OrderDetailPage({ params }: Context) {
   return (
     <>
       <PageHeader
+        eyebrow="Order servis"
         title={`Order ${order.ticket_number}`}
         description={`Dibuat ${formatDateTime(order.created_at)} · Status saat ini: ${
           serviceStatusLabels[order.status]
         }`}
       >
-        <Link
-          href="/admin/order"
-          className="rounded-lg border border-white/15 px-4 py-2 text-sm font-medium text-chrome transition-colors hover:border-white/40"
-        >
+        <Link href="/admin/order" className={buttonGhost}>
           Kembali
         </Link>
         {invoice ? (
-          <Link
-            href={`/admin/invoice/${invoice.id}`}
-            className="rounded-lg bg-electric px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-electric-soft"
-          >
+          <Link href={`/admin/invoice/${invoice.id}`} className={buttonPrimary}>
             Lihat invoice
           </Link>
         ) : null}
       </PageHeader>
 
-      <div className="grid gap-6 xl:grid-cols-[1.4fr_1fr]">
-        <div className="space-y-6">
+      <div className="grid gap-4 xl:grid-cols-[1.4fr_1fr]">
+        <div className="space-y-4">
           <Card>
-            <h2 className="font-display text-lg font-bold text-chrome">
-              Informasi order
-            </h2>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <h2 className="text-[13.5px] font-semibold">Informasi order</h2>
+              <ServiceStatusBadge status={order.status} />
+            </div>
             <div className="mt-4 grid gap-4 sm:grid-cols-2">
               <div>
-                <p className="text-[11px] uppercase tracking-[0.14em] text-dim">
+                <p className="text-[10.5px] uppercase tracking-[0.14em] text-[color:var(--bjork-text-soft)]">
                   Pelanggan
                 </p>
-                <p className="mt-1 text-sm text-chrome">
+                <p className="mt-1 text-sm text-[color:var(--bjork-text)]">
                   {order.customer?.full_name ?? "—"}
                 </p>
-                <p className="text-xs text-dim">
+                <p className="text-xs text-[color:var(--bjork-text-muted)]">
                   {order.customer?.phone ?? "—"}
                   {order.customer?.email ? ` · ${order.customer.email}` : ""}
                 </p>
                 {order.customer?.address ? (
-                  <p className="mt-1 text-xs text-dim">
+                  <p className="mt-1 text-xs text-[color:var(--bjork-text-muted)]">
                     {order.customer.address}
                   </p>
                 ) : null}
               </div>
 
               <div>
-                <p className="text-[11px] uppercase tracking-[0.14em] text-dim">
+                <p className="text-[10.5px] uppercase tracking-[0.14em] text-[color:var(--bjork-text-soft)]">
                   Perangkat
                 </p>
-                <p className="mt-1 text-sm text-chrome">
+                <p className="mt-1 text-sm text-[color:var(--bjork-text)]">
                   {order.device
                     ? `${order.device.brand} ${order.device.model}`
                     : "—"}
                 </p>
-                <p className="text-xs text-dim">
+                <p className="text-xs text-[color:var(--bjork-text-muted)]">
                   {order.device
                     ? deviceTypeLabels[order.device.device_type]
                     : "—"}
@@ -129,47 +127,47 @@ export default async function OrderDetailPage({ params }: Context) {
               </div>
 
               <div>
-                <p className="text-[11px] uppercase tracking-[0.14em] text-dim">
+                <p className="text-[10.5px] uppercase tracking-[0.14em] text-[color:var(--bjork-text-soft)]">
                   Estimasi selesai
                 </p>
-                <p className="mt-1 text-sm text-chrome">
+                <p className="mt-1 text-sm text-[color:var(--bjork-text)]">
                   {formatDateTime(order.estimated_finish_at)}
                 </p>
               </div>
 
               <div>
-                <p className="text-[11px] uppercase tracking-[0.14em] text-dim">
+                <p className="text-[10.5px] uppercase tracking-[0.14em] text-[color:var(--bjork-text-soft)]">
                   Estimasi biaya
                 </p>
-                <p className="mt-1 text-sm font-semibold text-chrome">
+                <p className="mt-1 text-sm font-semibold text-[color:var(--bjork-text)]">
                   {formatRupiah(order.total_amount)}
                 </p>
               </div>
             </div>
 
-            <div className="mt-5 space-y-4 border-t border-white/10 pt-4">
+            <div className="mt-5 space-y-4 border-t border-[color:var(--bjork-border)] pt-4">
               <div>
-                <p className="text-[11px] uppercase tracking-[0.14em] text-dim">
+                <p className="text-[10.5px] uppercase tracking-[0.14em] text-[color:var(--bjork-text-soft)]">
                   Keluhan
                 </p>
-                <p className="mt-1 whitespace-pre-line text-sm text-chrome">
+                <p className="mt-1 whitespace-pre-line text-sm text-[color:var(--bjork-text)]">
                   {order.complaint}
                 </p>
               </div>
               <div>
-                <p className="text-[11px] uppercase tracking-[0.14em] text-dim">
+                <p className="text-[10.5px] uppercase tracking-[0.14em] text-[color:var(--bjork-text-soft)]">
                   Diagnosa
                 </p>
-                <p className="mt-1 whitespace-pre-line text-sm text-chrome">
+                <p className="mt-1 whitespace-pre-line text-sm text-[color:var(--bjork-text)]">
                   {order.diagnosis ?? "—"}
                 </p>
               </div>
               {order.device?.notes ? (
                 <div>
-                  <p className="text-[11px] uppercase tracking-[0.14em] text-dim">
+                  <p className="text-[10.5px] uppercase tracking-[0.14em] text-[color:var(--bjork-text-soft)]">
                     Catatan perangkat
                   </p>
-                  <p className="mt-1 whitespace-pre-line text-sm text-chrome">
+                  <p className="mt-1 whitespace-pre-line text-sm text-[color:var(--bjork-text)]">
                     {order.device.notes}
                   </p>
                 </div>
@@ -178,30 +176,28 @@ export default async function OrderDetailPage({ params }: Context) {
           </Card>
 
           <Card>
-            <h2 className="font-display text-lg font-bold text-chrome">
-              Riwayat status
-            </h2>
-            <p className="text-xs text-dim">
+            <h2 className="text-[13.5px] font-semibold">Riwayat status</h2>
+            <p className="mt-0.5 text-[12px] text-[color:var(--bjork-text-muted)]">
               Catatan append-only dari setiap perubahan status.
             </p>
 
             {history.length === 0 ? (
-              <p className="mt-4 text-sm text-dim">
+              <p className="mt-4 text-sm text-[color:var(--bjork-text-muted)]">
                 Belum ada riwayat perubahan status.
               </p>
             ) : (
               <ol className="mt-4 space-y-4">
                 {history.map((entry) => (
                   <li key={entry.id} className="flex gap-3">
-                    <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-electric" />
-                    <div className="min-w-0 flex-1 border-b border-white/8 pb-4">
+                    <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-[var(--bjork-accent)]" />
+                    <div className="min-w-0 flex-1 border-b border-[color:var(--bjork-border)] pb-4">
                       <div className="flex flex-wrap items-center gap-2">
                         <ServiceStatusBadge status={entry.to_status} />
-                        <span className="text-xs text-dim">
+                        <span className="text-xs text-[color:var(--bjork-text-muted)]">
                           {formatDateTime(entry.created_at)}
                         </span>
                       </div>
-                      <p className="mt-1 text-xs text-dim">
+                      <p className="mt-1 text-xs text-[color:var(--bjork-text-muted)]">
                         Dari{" "}
                         {entry.from_status
                           ? serviceStatusLabels[entry.from_status]
@@ -209,7 +205,7 @@ export default async function OrderDetailPage({ params }: Context) {
                         · oleh {entry.staff?.full_name || "staf"}
                       </p>
                       {entry.note ? (
-                        <p className="mt-1 whitespace-pre-line text-sm text-chrome">
+                        <p className="mt-1 whitespace-pre-line text-sm text-[color:var(--bjork-text)]">
                           {entry.note}
                         </p>
                       ) : null}
@@ -223,7 +219,9 @@ export default async function OrderDetailPage({ params }: Context) {
 
         <OrderDetailManager
           order={order}
-          canDelete={session?.role === "owner"}
+          canManage={can(session.permissions, "orders", "manage")}
+          canDelete={can(session.permissions, "orders", "delete")}
+          canCancel={session.role === "owner"}
           hasInvoice={Boolean(invoice)}
         />
       </div>

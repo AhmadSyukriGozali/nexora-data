@@ -1,6 +1,7 @@
 import { PageHeader } from "@/components/admin/ui";
+import { can } from "@/lib/admin/access";
+import { requireStaffPage } from "@/lib/admin/guard";
 import type { Invoice, OrderOption } from "@/lib/admin/types";
-import { getStaffSession } from "@/lib/supabase/auth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 import { InvoiceManager } from "./invoice-manager";
@@ -10,7 +11,7 @@ export const instant = false;
 export const metadata = { title: "Invoice" };
 
 export default async function InvoicesPage() {
-  const session = await getStaffSession();
+  const session = await requireStaffPage("invoices");
   const supabase = await createSupabaseServerClient();
 
   const [invoicesResult, ordersResult] = await Promise.all([
@@ -44,7 +45,8 @@ export default async function InvoicesPage() {
       <InvoiceManager
         invoices={invoices}
         availableOrders={availableOrders}
-        canDelete={session?.role === "owner"}
+        canManage={can(session.permissions, "invoices", "manage")}
+        canDelete={can(session.permissions, "invoices", "delete")}
       />
     </>
   );

@@ -10,6 +10,7 @@ import { Process } from "@/components/home/process";
 import { Ticker } from "@/components/home/ticker";
 import { OurPromise } from "@/components/home/our-promise";
 import { Quote } from "@/components/home/quote";
+import { Testimonials } from "@/components/home/testimonials";
 import { faqs } from "@/lib/content";
 import { atmospherePhotos } from "@/lib/media";
 import { faqJsonLd } from "@/lib/structured-data";
@@ -39,6 +40,7 @@ export default function Home() {
       <Pricing />
       <OurPromise />
       <Quote />
+      <Testimonials />
       <Faq />
 
       <PhotoBand

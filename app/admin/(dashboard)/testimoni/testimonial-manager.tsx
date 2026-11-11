@@ -12,6 +12,7 @@ import {
 import {
   Card,
   EmptyState,
+  StatStrip,
   TestimonialStatusBadge,
 } from "@/components/admin/ui";
 import { apiRequest } from "@/lib/admin/client-api";
@@ -41,9 +42,11 @@ function Stars({ rating }: { rating: number }) {
 
 export function TestimonialManager({
   testimonials,
+  canManage,
   canDelete,
 }: {
   testimonials: Testimonial[];
+  canManage: boolean;
   canDelete: boolean;
 }) {
   const router = useRouter();
@@ -117,6 +120,29 @@ export function TestimonialManager({
 
   return (
     <div className="space-y-5">
+      <StatStrip
+        items={[
+          { label: "Total testimoni", value: testimonials.length },
+          {
+            label: "Menunggu",
+            value: testimonials.filter((item) => item.status === "menunggu")
+              .length,
+            tone: "warning",
+          },
+          {
+            label: "Disetujui",
+            value: testimonials.filter((item) => item.status === "disetujui")
+              .length,
+            tone: "success",
+          },
+          {
+            label: "Ditolak",
+            value: testimonials.filter((item) => item.status === "ditolak")
+              .length,
+            tone: "danger",
+          },
+        ]}
+      />
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
         <input
           className={`${inputClass} sm:max-w-sm`}
@@ -151,12 +177,12 @@ export function TestimonialManager({
             <Card key={testimonial.id} className="flex flex-col">
               <div className="flex flex-wrap items-start justify-between gap-2">
                 <div>
-                  <p className="font-display text-base font-bold text-chrome">
+                  <p className="font-display text-base font-bold text-[color:var(--bjork-text)]">
                     {testimonial.customer_name}
                   </p>
                   <div className="mt-1 flex flex-wrap items-center gap-2">
                     <Stars rating={testimonial.rating} />
-                    <span className="text-xs text-dim">
+                    <span className="text-xs text-[color:var(--bjork-text-muted)]">
                       {testimonial.phone ?? "tanpa nomor HP"}
                     </span>
                   </div>
@@ -164,11 +190,11 @@ export function TestimonialManager({
                 <TestimonialStatusBadge status={testimonial.status} />
               </div>
 
-              <p className="mt-3 flex-1 whitespace-pre-line text-sm text-chrome">
+              <p className="mt-3 flex-1 whitespace-pre-line text-sm text-[color:var(--bjork-text)]">
                 {testimonial.message}
               </p>
 
-              <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-white/10 pt-3 text-[11px] text-dim">
+              <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-[color:var(--bjork-border)] pt-3 text-[11px] text-[color:var(--bjork-text-muted)]">
                 <span>Masuk {formatDateTime(testimonial.created_at)}</span>
                 {testimonial.order?.ticket_number ? (
                   <span className="font-mono">
@@ -183,22 +209,26 @@ export function TestimonialManager({
               </div>
 
               <div className="mt-3 flex flex-wrap justify-end gap-2">
-                <button
-                  type="button"
-                  className={buttonSmallSuccess}
-                  disabled={busyId === testimonial.id}
-                  onClick={() => moderate(testimonial, "disetujui")}
-                >
-                  Setujui
-                </button>
-                <button
-                  type="button"
-                  className={buttonSmallDanger}
-                  disabled={busyId === testimonial.id}
-                  onClick={() => moderate(testimonial, "ditolak")}
-                >
-                  Tolak
-                </button>
+                {canManage ? (
+                  <>
+                    <button
+                      type="button"
+                      className={buttonSmallSuccess}
+                      disabled={busyId === testimonial.id}
+                      onClick={() => moderate(testimonial, "disetujui")}
+                    >
+                      Setujui
+                    </button>
+                    <button
+                      type="button"
+                      className={buttonSmallDanger}
+                      disabled={busyId === testimonial.id}
+                      onClick={() => moderate(testimonial, "ditolak")}
+                    >
+                      Tolak
+                    </button>
+                  </>
+                ) : null}
                 {canDelete ? (
                   <button
                     type="button"
@@ -215,7 +245,7 @@ export function TestimonialManager({
         </div>
       )}
 
-      <p className="text-xs text-dim">
+      <p className="text-xs text-[color:var(--bjork-text-muted)]">
         Menampilkan maksimal 200 testimoni terbaru. Hapus testimoni hanya
         tersedia untuk owner.
       </p>

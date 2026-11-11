@@ -1,6 +1,7 @@
 import { PageHeader } from "@/components/admin/ui";
+import { can } from "@/lib/admin/access";
+import { requireStaffPage } from "@/lib/admin/guard";
 import type { CustomerOption, Device } from "@/lib/admin/types";
-import { getStaffSession } from "@/lib/supabase/auth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 import { DeviceManager } from "./device-manager";
@@ -10,7 +11,7 @@ export const instant = false;
 export const metadata = { title: "Perangkat" };
 
 export default async function DevicesPage() {
-  const session = await getStaffSession();
+  const session = await requireStaffPage("devices");
   const supabase = await createSupabaseServerClient();
 
   const [devicesResult, customersResult] = await Promise.all([
@@ -35,7 +36,8 @@ export default async function DevicesPage() {
       <DeviceManager
         devices={(devicesResult.data ?? []) as Device[]}
         customers={(customersResult.data ?? []) as CustomerOption[]}
-        canDelete={session?.role === "owner"}
+        canManage={can(session.permissions, "devices", "manage")}
+        canDelete={can(session.permissions, "devices", "delete")}
       />
     </>
   );

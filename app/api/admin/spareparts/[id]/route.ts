@@ -1,4 +1,4 @@
-import { getStaffSession, ownerOnly } from "@/lib/supabase/auth";
+import { getStaffSession, requirePermission } from "@/lib/supabase/auth";
 import { dbErrorResponse, jsonError, jsonOk, parseBody } from "@/lib/supabase/http";
 import { sparepartUpdateSchema, uuidParamSchema } from "@/lib/supabase/schemas";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -28,7 +28,7 @@ export async function GET(_request: Request, context: Context) {
   if (mapped) return mapped;
   if (!data) return jsonError("Sparepart tidak ditemukan", 404);
 
-  if (session.role === "owner") {
+  if (session.permissions.spareparts.viewCost) {
     const costs = await getSparepartCostMap(supabase, [String(data.id)]);
     return jsonOk({ ...data, cost_price: costs.get(String(data.id)) ?? 0 });
   }
@@ -39,6 +39,9 @@ export async function GET(_request: Request, context: Context) {
 export async function PATCH(request: Request, context: Context) {
   const session = await getStaffSession();
   if (!session) return jsonError("Tidak terautentikasi", 401);
+
+  const forbidden = requirePermission(session, "spareparts", "manage");
+  if (forbidden) return forbidden;
 
   const rawId = await context.params;
   const parsedId = uuidParamSchema.safeParse(rawId.id);
@@ -103,7 +106,7 @@ export async function DELETE(_request: Request, context: Context) {
   const session = await getStaffSession();
   if (!session) return jsonError("Tidak terautentikasi", 401);
 
-  const forbidden = ownerOnly(session);
+  const forbidden = requirePermission(session, "spareparts", "delete");
   if (forbidden) return forbidden;
 
   const rawId = await context.params;

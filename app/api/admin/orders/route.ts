@@ -1,4 +1,4 @@
-import { getStaffSession } from "@/lib/supabase/auth";
+import { getStaffSession, requirePermission } from "@/lib/supabase/auth";
 import { dbErrorResponse, jsonError, jsonOk, parseBody, parseQuery } from "@/lib/supabase/http";
 import { orderCreateSchema, ordersQuerySchema } from "@/lib/supabase/schemas";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -36,6 +36,9 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   const session = await getStaffSession();
   if (!session) return jsonError("Tidak terautentikasi", 401);
+
+  const forbidden = requirePermission(session, "orders", "manage");
+  if (forbidden) return forbidden;
 
   const body = await parseBody(request, orderCreateSchema);
   if ("error" in body) return body.error;

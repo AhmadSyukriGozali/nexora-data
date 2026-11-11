@@ -1,4 +1,11 @@
-import { getStaffSession, ownerOnly } from "@/lib/supabase/auth";
+import { canManualInvoiceTransition } from "@/lib/admin/status-flow";
+import type { InvoiceStatus } from "@/lib/admin/types";
+import {
+  getStaffSession,
+  isOwner,
+  ownerOnly,
+  requirePermission,
+} from "@/lib/supabase/auth";
 import { dbErrorResponse, jsonError, jsonOk, parseBody } from "@/lib/supabase/http";
 import { invoiceUpdateSchema, uuidParamSchema } from "@/lib/supabase/schemas";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -33,6 +40,9 @@ export async function PATCH(request: Request, context: Context) {
   const session = await getStaffSession();
   if (!session) return jsonError("Tidak terautentikasi", 401);
 
+  const forbidden = requirePermission(session, "invoices", "manage");
+  if (forbidden) return forbidden;
+
   const rawId = await context.params;
   const parsedId = uuidParamSchema.safeParse(rawId.id);
   if (!parsedId.success) return jsonError("ID tidak valid", 422);
@@ -44,6 +54,33 @@ export async function PATCH(request: Request, context: Context) {
   }
 
   const supabase = await createSupabaseServerClient();
+
+  if (body.data.status !== undefined) {
+    const { data: current, error: currentError } = await supabase
+      .from("invoices")
+      .select("status")
+      .eq("id", parsedId.data)
+      .maybeSingle<{ status: InvoiceStatus }>();
+
+    const currentMapped = dbErrorResponse(currentError);
+    if (currentMapped) return currentMapped;
+    if (!current) return jsonError("Invoice tidak ditemukan", 404);
+
+    if (body.data.status === "batal" && !isOwner(session)) {
+      return jsonError("Hanya owner yang boleh membatalkan invoice.", 403);
+    }
+
+    if (
+      body.data.status !== current.status &&
+      !canManualInvoiceTransition(current.status, body.data.status)
+    ) {
+      return jsonError(
+        `Status invoice tidak bisa berpindah dari ${current.status} ke ${body.data.status}. Status lunas hanya otomatis dari pembayaran penuh.`,
+        422,
+      );
+    }
+  }
+
   const { data, error } = await supabase
     .from("invoices")
     .update(body.data)

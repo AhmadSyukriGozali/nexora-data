@@ -1,7 +1,5 @@
-import { redirect } from "next/navigation";
-
 import { PageHeader } from "@/components/admin/ui";
-import { getStaffSession } from "@/lib/supabase/auth";
+import { requireOwnerPage } from "@/lib/admin/guard";
 import { listStaffMembers } from "@/lib/supabase/staff";
 
 import { StaffManager } from "./staff-manager";
@@ -11,17 +9,16 @@ export const instant = false;
 export const metadata = { title: "Staf" };
 
 export default async function StaffPage() {
-  const session = await getStaffSession();
-  if (!session) redirect("/admin/login");
-  if (session.role !== "owner") redirect("/admin");
+  const session = await requireOwnerPage();
 
   const { members, error } = await listStaffMembers();
 
   return (
     <>
       <PageHeader
+        eyebrow="Khusus owner"
         title="Staf"
-        description="Kelola akun owner dan admin. Hanya owner yang dapat membuka halaman ini."
+        description="Kelola akun owner dan admin, atur izin per modul, reset password, dan kirim ulang undangan."
       />
       {error ? (
         <p

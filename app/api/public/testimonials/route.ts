@@ -8,6 +8,55 @@ type OrderRow = {
   customer_id: string;
 };
 
+type ApprovedRow = {
+  customer_name: string;
+  rating: number;
+  message: string;
+  created_at: string;
+};
+
+const LIST_LIMIT = 12;
+
+/** Nama publik dipotong jadi "Budi S." supaya nama lengkap tidak tersebar. */
+function maskName(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length <= 1) return parts[0] ?? "";
+  return `${parts[0]} ${parts
+    .slice(1)
+    .map((part) => `${part[0]}.`)
+    .join(" ")}`;
+}
+
+export async function GET() {
+  const supabase = createSupabaseAdminClient();
+  const { data, error } = await supabase
+    .from("testimonials")
+    .select("customer_name, rating, message, created_at")
+    .eq("status", "disetujui")
+    .order("created_at", { ascending: false })
+    .limit(LIST_LIMIT);
+
+  if (error) {
+    console.error("public testimonial list:", error);
+    return jsonError("Gagal memuat testimoni", 500);
+  }
+
+  // Hanya nama tersamar, rating, isi, dan tanggal. Nomor HP tidak pernah keluar.
+  const items = ((data ?? []) as ApprovedRow[]).map((row) => ({
+    name: maskName(row.customer_name),
+    rating: row.rating,
+    message: row.message,
+    created_at: row.created_at,
+  }));
+
+  const response = jsonOk(items);
+  response.headers.set(
+    "Cache-Control",
+    "public, s-maxage=300, stale-while-revalidate=600",
+  );
+  return response;
+}
+
 export async function POST(request: Request) {
   const ipLimit = rateLimit(
     `testimonial:ip:${getClientIp(request)}`,

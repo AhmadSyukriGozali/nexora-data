@@ -18,6 +18,7 @@ import {
   Card,
   EmptyState,
   InvoiceStatusBadge,
+  StatStrip,
 } from "@/components/admin/ui";
 import { apiRequest } from "@/lib/admin/client-api";
 import {
@@ -42,10 +43,12 @@ const STATUSES = Object.keys(invoiceStatusLabels) as InvoiceStatus[];
 export function InvoiceManager({
   invoices,
   availableOrders,
+  canManage,
   canDelete,
 }: {
   invoices: Invoice[];
   availableOrders: OrderOption[];
+  canManage: boolean;
   canDelete: boolean;
 }) {
   const router = useRouter();
@@ -136,6 +139,39 @@ export function InvoiceManager({
 
   return (
     <div className="space-y-5">
+      <StatStrip
+        items={[
+          { label: "Total invoice", value: invoices.length },
+          {
+            label: "Draft",
+            value: invoices.filter((invoice) => invoice.status === "draft")
+              .length,
+            tone: "warning",
+          },
+          {
+            label: "Belum lunas",
+            value: invoices.filter(
+              (invoice) =>
+                invoice.status === "draft" || invoice.status === "terkirim",
+            ).length,
+            tone: "accent",
+          },
+          {
+            label: "Sisa tagihan",
+            value: formatRupiah(
+              invoices.reduce(
+                (total, invoice) =>
+                  total +
+                  Math.max(
+                    0,
+                    invoice.total_amount - invoice.paid_amount,
+                  ),
+                0,
+              ),
+            ),
+          },
+        ]}
+      />
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex flex-col gap-3 sm:flex-row">
           <input
@@ -159,14 +195,16 @@ export function InvoiceManager({
             ))}
           </select>
         </div>
-        <button
-          type="button"
-          onClick={openCreate}
-          className={buttonPrimary}
-          disabled={availableOrders.length === 0}
-        >
-          Invoice baru
-        </button>
+        {canManage ? (
+          <button
+            type="button"
+            onClick={openCreate}
+            className={buttonPrimary}
+            disabled={availableOrders.length === 0}
+          >
+            Invoice baru
+          </button>
+        ) : null}
       </div>
 
       {availableOrders.length === 0 ? (
@@ -176,15 +214,15 @@ export function InvoiceManager({
         </p>
       ) : null}
 
-      {showForm ? (
+      {showForm && canManage ? (
         <div id="invoice-form">
           <Card>
             <div className="mb-4 flex items-center justify-between">
               <div>
-                <h2 className="font-display text-lg font-bold text-chrome">
+                <h2 className="font-display text-lg font-bold text-[color:var(--bjork-text)]">
                   Invoice baru
                 </h2>
-                <p className="text-xs text-dim">
+                <p className="text-xs text-[color:var(--bjork-text-muted)]">
                   Nomor invoice dibuat otomatis. Satu order hanya boleh punya
                   satu invoice.
                 </p>
@@ -272,7 +310,7 @@ export function InvoiceManager({
         <Card className="p-0">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="text-left text-[11px] uppercase tracking-[0.14em] text-dim">
+              <thead className="text-left text-[11px] uppercase tracking-[0.14em] text-[color:var(--bjork-text-muted)]">
                 <tr>
                   <th className="px-4 py-3 font-semibold">Invoice</th>
                   <th className="px-4 py-3 font-semibold">Order</th>
@@ -288,30 +326,30 @@ export function InvoiceManager({
                 {filtered.map((invoice) => {
                   const remaining = invoice.total_amount - invoice.paid_amount;
                   return (
-                    <tr key={invoice.id} className="border-t border-white/8">
+                    <tr key={invoice.id} className="border-t border-[color:var(--bjork-border)]">
                       <td className="whitespace-nowrap px-4 py-3">
                         <Link
                           href={`/admin/invoice/${invoice.id}`}
-                          className="font-mono text-xs text-electric-soft hover:text-chrome"
+                          className="font-mono text-xs text-[color:var(--blk-accent-ink)] hover:text-[color:var(--bjork-text)]"
                         >
                           {invoice.invoice_number}
                         </Link>
                       </td>
                       <td className="px-4 py-3">
-                        <p className="text-chrome">
+                        <p className="text-[color:var(--bjork-text)]">
                           {invoice.order?.ticket_number ?? "—"}
                         </p>
-                        <p className="text-xs text-dim">
+                        <p className="text-xs text-[color:var(--bjork-text-muted)]">
                           {invoice.order?.customer?.full_name ?? ""}
                         </p>
                       </td>
                       <td className="px-4 py-3">
                         <InvoiceStatusBadge status={invoice.status} />
                       </td>
-                      <td className="whitespace-nowrap px-4 py-3 text-dim">
+                      <td className="whitespace-nowrap px-4 py-3 text-[color:var(--bjork-text-muted)]">
                         {formatRupiah(invoice.total_amount)}
                       </td>
-                      <td className="whitespace-nowrap px-4 py-3 text-dim">
+                      <td className="whitespace-nowrap px-4 py-3 text-[color:var(--bjork-text-muted)]">
                         {formatRupiah(invoice.paid_amount)}
                       </td>
                       <td className="whitespace-nowrap px-4 py-3">
@@ -323,7 +361,7 @@ export function InvoiceManager({
                           {formatRupiah(Math.max(remaining, 0))}
                         </span>
                       </td>
-                      <td className="whitespace-nowrap px-4 py-3 text-xs text-dim">
+                      <td className="whitespace-nowrap px-4 py-3 text-xs text-[color:var(--bjork-text-muted)]">
                         {formatDateTime(invoice.issued_at)}
                       </td>
                       <td className="px-4 py-3">

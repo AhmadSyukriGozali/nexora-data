@@ -1,10 +1,7 @@
 import { PageHeader } from "@/components/admin/ui";
-import type {
-  OrderOption,
-  Sparepart,
-  StockMovement,
-} from "@/lib/admin/types";
-import { getStaffSession } from "@/lib/supabase/auth";
+import { can } from "@/lib/admin/access";
+import { requireStaffPage } from "@/lib/admin/guard";
+import type { OrderOption, Sparepart, StockMovement } from "@/lib/admin/types";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getSparepartCostMap } from "@/lib/supabase/sparepart-costs";
 
@@ -15,8 +12,7 @@ export const instant = false;
 export const metadata = { title: "Sparepart" };
 
 export default async function SparepartsPage() {
-  const session = await getStaffSession();
-  const isOwner = session?.role === "owner";
+  const session = await requireStaffPage("spareparts");
   const supabase = await createSupabaseServerClient();
 
   const [sparepartsResult, movementsResult, ordersResult] = await Promise.all([
@@ -40,8 +36,9 @@ export default async function SparepartsPage() {
   ]);
 
   const spareparts = (sparepartsResult.data ?? []) as Sparepart[];
+  const canSeeCost = session.permissions.spareparts.viewCost;
 
-  if (isOwner) {
+  if (canSeeCost) {
     const costs = await getSparepartCostMap(
       supabase,
       spareparts.map((sparepart) => sparepart.id),
@@ -61,8 +58,9 @@ export default async function SparepartsPage() {
         spareparts={spareparts}
         movements={(movementsResult.data ?? []) as StockMovement[]}
         orders={(ordersResult.data ?? []) as OrderOption[]}
-        canDelete={isOwner}
-        canSeeCost={isOwner}
+        canManage={can(session.permissions, "spareparts", "manage")}
+        canDelete={can(session.permissions, "spareparts", "delete")}
+        canSeeCost={canSeeCost}
       />
     </>
   );

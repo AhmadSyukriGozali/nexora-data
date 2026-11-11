@@ -1,6 +1,7 @@
 import { PageHeader } from "@/components/admin/ui";
+import { can } from "@/lib/admin/access";
+import { requireStaffPage } from "@/lib/admin/guard";
 import type { Testimonial } from "@/lib/admin/types";
-import { getStaffSession } from "@/lib/supabase/auth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 import { TestimonialManager } from "./testimonial-manager";
@@ -10,7 +11,7 @@ export const instant = false;
 export const metadata = { title: "Testimoni" };
 
 export default async function TestimonialsPage() {
-  const session = await getStaffSession();
+  const session = await requireStaffPage("testimonials");
   const supabase = await createSupabaseServerClient();
 
   const { data } = await supabase
@@ -27,7 +28,8 @@ export default async function TestimonialsPage() {
       />
       <TestimonialManager
         testimonials={(data ?? []) as Testimonial[]}
-        canDelete={session?.role === "owner"}
+        canManage={can(session.permissions, "testimonials", "manage")}
+        canDelete={can(session.permissions, "testimonials", "delete")}
       />
     </>
   );

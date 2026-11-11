@@ -1,6 +1,7 @@
 import { PageHeader } from "@/components/admin/ui";
+import { can } from "@/lib/admin/access";
+import { requireStaffPage } from "@/lib/admin/guard";
 import type { Customer } from "@/lib/admin/types";
-import { getStaffSession } from "@/lib/supabase/auth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 import { CustomerManager } from "./customer-manager";
@@ -10,7 +11,7 @@ export const instant = false;
 export const metadata = { title: "Pelanggan" };
 
 export default async function CustomersPage() {
-  const session = await getStaffSession();
+  const session = await requireStaffPage("customers");
   const supabase = await createSupabaseServerClient();
   const { data } = await supabase
     .from("customers")
@@ -26,7 +27,8 @@ export default async function CustomersPage() {
       />
       <CustomerManager
         customers={(data ?? []) as Customer[]}
-        canDelete={session?.role === "owner"}
+        canManage={can(session.permissions, "customers", "manage")}
+        canDelete={can(session.permissions, "customers", "delete")}
       />
     </>
   );

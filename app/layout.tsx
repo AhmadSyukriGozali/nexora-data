@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Plus_Jakarta_Sans, Sora } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 import { Cursor } from "@/components/motion/cursor";
 import { MotionProvider } from "@/components/motion/motion-provider";
@@ -9,15 +9,18 @@ import { SiteHeader } from "@/components/site-header";
 import { site } from "@/lib/site";
 import { localBusinessJsonLd } from "@/lib/structured-data";
 
-const sora = Sora({
-  subsets: ["latin"],
+const sora = localFont({
+  src: "./fonts/Sora-latin.woff2",
+  weight: "400 800",
+  style: "normal",
   variable: "--font-sora",
-  weight: ["400", "500", "600", "700", "800"],
   display: "swap",
 });
 
-const jakarta = Plus_Jakarta_Sans({
-  subsets: ["latin"],
+const jakarta = localFont({
+  src: "./fonts/PlusJakartaSans-latin.woff2",
+  weight: "200 800",
+  style: "normal",
   variable: "--font-jakarta",
   display: "swap",
 });

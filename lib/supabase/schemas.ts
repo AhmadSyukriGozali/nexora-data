@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { MODULES } from "@/lib/admin/access";
+
 /** Normalisasi nomor HP Indonesia menjadi digit saja (contoh: +62 815 → 0815). */
 export function normalizePhone(input: string): string {
   const digits = input.replace(/\D/g, "");
@@ -191,17 +193,47 @@ export const paymentUpdateSchema = z.strictObject({
 // ---------------------------------------------------------------------------
 // Staf
 // ---------------------------------------------------------------------------
-export const staffCreateSchema = z.strictObject({
-  email: z.email("Email tidak valid").max(160),
-  full_name: z.string().trim().min(2).max(120),
-  password: z.string().min(8, "Password minimal 8 karakter").max(72),
-  role: z.enum(["owner", "admin"]).default("admin"),
+export const permissionEntrySchema = z.strictObject({
+  module: z.enum(MODULES),
+  can_view: z.boolean(),
+  can_manage: z.boolean(),
+  can_delete: z.boolean(),
+  can_view_cost: z.boolean().optional(),
 });
+
+const presetSchema = z.enum(["teknisi", "kasir", "operasional"]);
+
+export const staffCreateSchema = z
+  .strictObject({
+    email: z.email("Email tidak valid").max(160),
+    full_name: z.string().trim().min(2).max(120),
+    mode: z.enum(["password", "invite"]).default("password"),
+    password: z.string().min(8, "Password minimal 8 karakter").max(72).optional(),
+    role: z.enum(["owner", "admin"]).default("admin"),
+    preset: presetSchema.optional(),
+    permissions: z.array(permissionEntrySchema).max(MODULES.length).optional(),
+  })
+  .refine((value) => value.mode !== "password" || Boolean(value.password), {
+    message: "Password wajib diisi untuk mode password.",
+    path: ["password"],
+  });
 
 export const staffUpdateSchema = z.strictObject({
   role: z.enum(["owner", "admin"]).optional(),
   is_active: z.boolean().optional(),
+  preset: presetSchema.optional(),
+  permissions: z.array(permissionEntrySchema).max(MODULES.length).optional(),
 });
+
+export const staffPasswordResetSchema = z
+  .strictObject({
+    mode: z.enum(["password", "email"]).default("password"),
+    password: z.string().min(8, "Password minimal 8 karakter").max(72).optional(),
+  })
+  .refine((value) => value.mode !== "password" || Boolean(value.password), {
+    message: "Password baru wajib diisi.",
+    path: ["password"],
+  });
 
 // ---------------------------------------------------------------------------
 // Sparepart & stok
