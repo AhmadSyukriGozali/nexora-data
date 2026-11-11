@@ -32,11 +32,11 @@ export function AuthShell({
         fill
         priority
         sizes="100vw"
-        className="object-cover opacity-40"
+        className="object-cover"
       />
       <div
         aria-hidden="true"
-        className="absolute inset-0 bg-[radial-gradient(120%_90%_at_50%_0%,rgba(6,16,36,0.5),rgba(6,16,36,0.95))]"
+        className="absolute inset-0 bg-gradient-to-t from-[#061024]/85 via-[#061024]/25 to-[#061024]/65"
       />
 
       <div className="relative h-full overflow-y-auto overscroll-contain">
@@ -60,11 +60,11 @@ export function AuthShell({
               </div>
             </div>
 
-            <div className="rounded-2xl border border-[color:var(--bjork-border-strong)] bg-[#0a1730]/60 p-6 shadow-[0_24px_60px_-24px_rgba(0,0,0,0.85)] backdrop-blur-xl sm:p-8">
-              <h1 className="font-display text-2xl font-bold text-[color:var(--bjork-text)]">
+            <div className="rounded-2xl border border-white/20 bg-white/10 p-6 shadow-[0_24px_80px_-24px_rgba(0,0,0,0.7)] backdrop-blur-2xl sm:p-8">
+              <h1 className="font-display text-2xl font-bold text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.45)]">
                 {title}
               </h1>
-              <p className="mt-1 text-sm text-[color:var(--bjork-text-muted)]">
+              <p className="mt-1 text-sm text-white/75">
                 {description}
               </p>
               <div className="mt-6">{children}</div>

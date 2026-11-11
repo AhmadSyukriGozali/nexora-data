@@ -6,6 +6,7 @@ import { MotionProvider } from "@/components/motion/motion-provider";
 import { RouteWipe } from "@/components/motion/route-wipe";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
+import { SiteChrome } from "@/components/site-chrome";
 import { site } from "@/lib/site";
 import { localBusinessJsonLd } from "@/lib/structured-data";
 
@@ -121,9 +122,13 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             Lompat ke konten
           </a>
           <div aria-hidden="true" className="grain" />
-          <SiteHeader />
+          <SiteChrome>
+            <SiteHeader />
+          </SiteChrome>
           <main id="konten">{children}</main>
-          <SiteFooter />
+          <SiteChrome>
+            <SiteFooter />
+          </SiteChrome>
           <RouteWipe />
           <Cursor />
         </MotionProvider>
