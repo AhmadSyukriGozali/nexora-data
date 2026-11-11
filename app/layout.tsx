@@ -55,6 +55,10 @@ export const metadata: Metadata = {
     "upgrade SSD laptop",
     "Nexora Data",
     "Nexora Data Service",
+    "Recovery Data",
+    "Backup Data",
+    "Bitlocker Recovery",
+    
     "2026"
   ],
   applicationName: site.name,
