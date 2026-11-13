@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
@@ -15,9 +16,22 @@ import { PrintButton } from "./print-button";
 
 export const instant = false;
 
-export const metadata = { title: "Nota Penerimaan" };
-
 type Context = { params: Promise<{ id: string }> };
+
+/** Judul dipakai browser sebagai nama berkas saat disimpan ke PDF. */
+export async function generateMetadata({ params }: Context): Promise<Metadata> {
+  const { id } = await params;
+  const supabase = await createSupabaseServerClient();
+  const { data } = await supabase
+    .from("service_orders")
+    .select("ticket_number")
+    .eq("id", id)
+    .maybeSingle();
+
+  return {
+    title: data ? `Nota ${data.ticket_number as string}` : "Nota Penerimaan",
+  };
+}
 
 export default async function ReceiptPage({ params }: Context) {
   const { id } = await params;
@@ -56,6 +70,9 @@ export default async function ReceiptPage({ params }: Context) {
               {site.address.city} {site.address.postal}
             </p>
             <p>Telp/WA {site.phone.display}</p>
+            <p className="mt-0.5 text-[9px]">
+              {site.hours.days} {site.hours.open}–{site.hours.close}
+            </p>
           </header>
 
           <p className="mt-3 text-center text-[11px] font-semibold tracking-[0.18em] uppercase">
@@ -89,12 +106,7 @@ export default async function ReceiptPage({ params }: Context) {
             ) : (
               <ul className="mt-1 space-y-0.5">
                 {equipment.map((item) => (
-                  <li key={item.label}>
-                    <span className="mr-1 font-bold">
-                      {item.returned ? "✓" : "✗"}
-                    </span>
-                    {item.label}
-                  </li>
+                  <li key={item.label}>✓ {item.label}</li>
                 ))}
               </ul>
             )}
@@ -116,6 +128,7 @@ export default async function ReceiptPage({ params }: Context) {
               Garansi mengikuti kesepakatan saat unit diserahkan. Simpan nota ini
               untuk klaim garansi.
             </p>
+            <p className="mt-1">Pengambilan unit pada jam operasional.</p>
           </section>
 
           <div className="mt-5 grid grid-cols-2 gap-3 text-center">
