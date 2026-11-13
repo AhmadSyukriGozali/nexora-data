@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import { MODULES } from "@/lib/admin/access";
+import { normalizeEquipment } from "@/lib/admin/equipment";
 import { isTicketNumber } from "@/lib/tickets/ticket-number";
 
 /** Normalisasi nomor HP Indonesia menjadi digit saja (contoh: +62 815 → 0815). */
@@ -119,6 +120,17 @@ export const devicesQuerySchema = z.strictObject({
 // ---------------------------------------------------------------------------
 // Order servis
 // ---------------------------------------------------------------------------
+const equipmentItemSchema = z.strictObject({
+  label: z.string().trim().min(1).max(40),
+  returned: z.boolean().default(false),
+});
+
+/** Daftar bawaan pelanggan; normalisasi yang sama dipakai UI. */
+export const equipmentSchema = z
+  .array(equipmentItemSchema)
+  .max(10)
+  .transform(normalizeEquipment);
+
 export const orderCreateSchema = z.strictObject({
   customer_id: uuidSchema,
   device_id: uuidSchema,
@@ -126,6 +138,7 @@ export const orderCreateSchema = z.strictObject({
   diagnosis: z.string().trim().max(2000).nullish(),
   estimated_finish_at: optionalTimestamp,
   total_amount: z.number().int().min(0).max(1_000_000_000_000).optional(),
+  equipment: equipmentSchema.optional(),
 });
 
 export const orderUpdateSchema = z.strictObject({
@@ -134,6 +147,7 @@ export const orderUpdateSchema = z.strictObject({
   estimated_finish_at: optionalTimestamp,
   total_amount: z.number().int().min(0).max(1_000_000_000_000).optional(),
   assigned_technician_id: z.string().uuid().nullable().optional(),
+  equipment: equipmentSchema.optional(),
 });
 
 export const orderStatusSchema = z.strictObject({

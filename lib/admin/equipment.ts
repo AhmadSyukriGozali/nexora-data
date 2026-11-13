@@ -31,3 +31,24 @@ export function normalizeEquipment(
 
   return result;
 }
+
+/** Baca checkbox `equipment`, `returned:<label>`, dan isian bebas dari form. */
+export function equipmentFromFormData(
+  get: (name: string) => FormDataEntryValue | null,
+  getAll: (name: string) => FormDataEntryValue[],
+): EquipmentItem[] {
+  const items = getAll("equipment").map((label) => ({
+    label: String(label),
+    returned: get(`returned:${String(label)}`) === "on",
+  }));
+
+  const other = String(get("equipment_other") ?? "");
+  if (other.trim()) {
+    items.push({
+      label: other,
+      returned: get("equipment_other_returned") === "on",
+    });
+  }
+
+  return normalizeEquipment(items);
+}

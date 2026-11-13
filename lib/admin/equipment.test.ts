@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { normalizeEquipment } from "./equipment";
+import { equipmentFromFormData, normalizeEquipment } from "./equipment";
 
 describe("normalizeEquipment", () => {
   it("memangkas spasi dan membuang label kosong", () => {
@@ -29,5 +29,40 @@ describe("normalizeEquipment", () => {
     expect(normalizeEquipment([{ label: "x".repeat(60) }])[0].label).toHaveLength(
       40,
     );
+  });
+});
+
+describe("equipmentFromFormData", () => {
+  it("membaca checkbox preset, isian bebas, dan status kembali", () => {
+    const form = new FormData();
+    form.append("equipment", "Charger");
+    form.append("returned:Charger", "on");
+    form.append("equipment", "Tas/case");
+    form.append("equipment_other", "  Kunci rumah ");
+    form.append("equipment_other_returned", "on");
+
+    expect(
+      equipmentFromFormData(
+        (name) => form.get(name),
+        (name) => form.getAll(name),
+      ),
+    ).toEqual([
+      { label: "Charger", returned: true },
+      { label: "Tas/case", returned: false },
+      { label: "Kunci rumah", returned: true },
+    ]);
+  });
+
+  it("mengabaikan isian bebas kosong", () => {
+    const form = new FormData();
+    form.append("equipment", "Charger");
+    form.append("equipment_other", "   ");
+
+    expect(
+      equipmentFromFormData(
+        (name) => form.get(name),
+        (name) => form.getAll(name),
+      ),
+    ).toEqual([{ label: "Charger", returned: false }]);
   });
 });
