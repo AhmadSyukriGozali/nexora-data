@@ -2,9 +2,8 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { Reveal } from "@/components/reveal";
-import { ButtonLink } from "@/components/ui/button-link";
 import { Section } from "@/components/ui/section";
-import { cn } from "@/lib/cn";
+import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { estimates, type DeviceKey } from "@/lib/content";
 import { site, waLink } from "@/lib/site";
 
@@ -27,7 +26,6 @@ type ServiceBlock = {
   lead: string;
   image: string;
   alt: string;
-  tone: "paper" | "navy";
 };
 
 const serviceBlocks: ServiceBlock[] = [
@@ -37,7 +35,6 @@ const serviceBlocks: ServiceBlock[] = [
     lead: "Dari layar pecah sampai ponsel yang tidak mau menyala setelah kena air. Pengerjaan board dikerjakan di tempat, bukan dikirim ke pihak ketiga.",
     image: "/images/repair-lab.webp",
     alt: "Teknisi membuka cangkang ponsel dengan alat presisi di meja kerja",
-    tone: "paper",
   },
   {
     device: "laptop",
@@ -45,7 +42,6 @@ const serviceBlocks: ServiceBlock[] = [
     lead: "Laptop lambat, layar bergaris, engsel patah, atau mati total. Kami cek dulu apakah perbaikannya masih sepadan dengan harga perangkat.",
     image: "/images/laptop-repair-tall.webp",
     alt: "Bagian dalam laptop terbuka memperlihatkan baterai, kipas, dan slot memori",
-    tone: "navy",
   },
   {
     device: "pc",
@@ -53,52 +49,66 @@ const serviceBlocks: ServiceBlock[] = [
     lead: "PC rakitan yang tidak menyala, panas berlebih, atau butuh upgrade. Untuk rakit baru, kami bantu pilih part sesuai budget dan kebutuhan.",
     image: "/images/motherboard-6.webp",
     alt: "Motherboard komputer dengan soket prosesor dan slot memori terlihat dari dekat",
-    tone: "paper",
   },
   {
     device: "printer",
     title: "Servis Printer",
-    lead: "Cetakan bergaris, kertas macet, tinta tidak keluar, atau printer yang tidak terdeteksi. Kami tangani inkjet, laser, dan multifungsi, termasuk reset waste ink dan penggantian print head.",
+    lead: "Cetakan bergaris, kertas macet, tinta tidak keluar, atau printer yang tidak terdeteksi. Kami tangani inkjet, laser, dan multifungsi.",
     image: "/images/printer-repair.webp",
     alt: "Teknisi memeriksa bagian dalam printer yang sudah dibuka",
-    tone: "navy",
   },
 ];
 
 export default function LayananPage() {
   return (
     <>
-      <Section tone="navy" className="pb-16 pt-[140px] md:pb-24 md:pt-[190px]">
-        <div className="container-page">
+      <Section tone="paper" className="page-top">
+        <div className="container-page pb-8 md:pb-12">
           <Reveal>
-            <h1 className="display-xl text-[clamp(2.9rem,8vw,7.5rem)] text-chrome">
+            <h1 className="display-xl text-[clamp(2.2rem,5vw,3.6rem)] text-ink">
               Layanan
             </h1>
           </Reveal>
-
-          <Reveal delay={80}>
-            <p className="mt-6 max-w-[54ch] text-[18px] leading-relaxed text-dim md:text-[19px]">
+          <Reveal delay={60}>
+            <p className="mt-4 max-w-[58ch] text-[17px] leading-relaxed text-ink-soft">
               Servis HP, laptop, PC, dan printer di Pulo Gebang, Cakung,
               Jakarta Timur. Diagnosa gratis, harga disepakati lebih dulu.
             </p>
+          </Reveal>
+
+          <Reveal delay={100}>
+            <nav aria-label="Layanan per perangkat" className="mt-6 flex flex-wrap gap-2">
+              {serviceBlocks.map((block) => (
+                <a
+                  key={block.device}
+                  href={`#${block.device}`}
+                  className="rounded-full border border-line bg-white px-4 py-2 text-[14px] font-medium text-ink transition-colors hover:border-ink/30"
+                >
+                  {estimates[block.device].label}
+                </a>
+              ))}
+            </nav>
           </Reveal>
         </div>
       </Section>
 
       {serviceBlocks.map((block, index) => {
         const data = estimates[block.device];
-        const isPaper = block.tone === "paper";
         const imageFirst = index % 2 === 0;
 
         return (
           <Section
             key={block.device}
             id={block.device}
-            tone={block.tone}
-            className="scroll-mt-24"
+            tone="paper"
+            className={
+              index > 0
+                ? "scroll-mt-24 border-t border-line"
+                : "scroll-mt-24"
+            }
           >
             <div className="container-page section-pad">
-              <div className="grid items-start gap-y-10 md:grid-cols-12 md:gap-x-14">
+              <div className="grid items-start gap-y-8 md:grid-cols-12 md:gap-x-12">
                 <Reveal
                   className={
                     imageFirst
@@ -106,13 +116,13 @@ export default function LayananPage() {
                       : "md:col-span-5 md:order-2"
                   }
                 >
-                  <div className="relative aspect-[4/3] overflow-hidden">
+                  <div className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-paper-deep">
                     <Image
                       src={block.image}
                       alt={block.alt}
                       fill
                       sizes="(min-width: 768px) 40vw, 100vw"
-                      className="drift object-cover"
+                      className="object-cover"
                     />
                   </div>
                 </Reveal>
@@ -125,58 +135,52 @@ export default function LayananPage() {
                   }
                 >
                   <Reveal>
-                    <h2 className="display-lg text-[clamp(2.1rem,4.4vw,3.9rem)]">
+                    <h2 className="display-lg text-[clamp(1.8rem,3.4vw,2.8rem)] text-ink">
                       {block.title}
                     </h2>
-                    <p
-                      className={`mt-4 max-w-[52ch] text-[16px] leading-relaxed md:text-[17px] ${
-                        isPaper ? "text-ink-soft" : "text-dim"
-                      }`}
-                    >
+                    <p className="mt-3 max-w-[52ch] text-[16px] leading-relaxed text-ink-soft md:text-[17px]">
                       {block.lead}
                     </p>
                   </Reveal>
 
-                  <Reveal delay={80}>
-                    <ul className="mt-8 space-y-1">
+                  <Reveal delay={60}>
+                    <ul className="mt-6 border-t border-line">
                       {data.items.map((item) => (
                         <li
                           key={item.issue}
-                          className={cn(
-                            "flex items-baseline justify-between gap-6 py-2.5 text-[15px] md:text-[16px]",
-                            isPaper ? "text-ink-soft" : "text-dim",
-                          )}
+                          className="flex items-baseline justify-between gap-6 border-b border-line py-3 text-[15px] md:text-[16px]"
                         >
-                          <span>{item.issue}</span>
-                          <span
-                            className={cn(
-                              "shrink-0 tabular-nums",
-                              isPaper ? "text-ink" : "text-chrome",
-                            )}
-                          >
+                          <span className="text-ink-soft">{item.issue}</span>
+                          <span className="shrink-0 tabular-nums text-ink">
                             {item.price}
                           </span>
                         </li>
                       ))}
                     </ul>
 
-                    <p
-                      className={`mt-4 max-w-[58ch] text-[14px] leading-relaxed ${
-                        isPaper ? "text-ink-soft" : "text-dim"
-                      }`}
-                    >
+                    <p className="mt-4 max-w-[58ch] text-[14px] leading-relaxed text-ink-soft">
                       {data.note}
                     </p>
 
-                    <ButtonLink
-                      href={waLink(
-                        `Halo Nexora Data, saya mau servis ${data.full.toLowerCase()}. Bisa dibantu cek estimasinya?`,
-                      )}
-                      tone={isPaper ? "on-light" : "on-dark"}
-                      className="mt-7"
-                    >
-                      Tanya soal {data.label}
-                    </ButtonLink>
+                    <div className="mt-6 flex flex-wrap items-center gap-4">
+                      <a
+                        href={waLink(
+                          `Halo Nexora Data, saya mau servis ${data.full.toLowerCase()}. Bisa dibantu cek estimasinya?`,
+                        )}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 rounded-full bg-electric px-5 py-3 text-[14px] font-semibold text-white transition-colors hover:bg-navy"
+                      >
+                        <WhatsAppIcon className="h-4 w-4" />
+                        Tanya soal {data.label}
+                      </a>
+                      <Link
+                        href="/tarif"
+                        className="text-[14px] font-semibold text-ink underline underline-offset-4 hover:text-electric"
+                      >
+                        Lihat estimasi biaya
+                      </Link>
+                    </div>
                   </Reveal>
                 </div>
               </div>
@@ -185,41 +189,38 @@ export default function LayananPage() {
         );
       })}
 
-      <Section tone="electric">
-        <div className="container-page grid gap-10 py-16 md:grid-cols-12 md:gap-x-14 md:py-20">
-          <div className="md:col-span-7">
-            <h2 className="display-lg text-[clamp(1.75rem,4.4vw,3.6rem)]">
-              Belum yakin rusaknya?
-            </h2>
-            <p className="mt-4 max-w-[52ch] text-[16px] leading-relaxed text-ink/90 md:text-[18px]">
-              Bawa perangkatnya ke {site.address.line2}. Diagnosa gratis, dan
-              kamu tetap boleh pulang tanpa perbaikan.
-            </p>
-          </div>
+      <Section tone="navy">
+        <div className="container-page section-pad">
+          <div className="grid gap-8 lg:grid-cols-[1fr_auto] lg:items-center">
+            <div>
+              <h2 className="display-lg text-[clamp(1.7rem,3vw,2.4rem)] text-white">
+                Belum yakin rusaknya?
+              </h2>
+              <p className="mt-3 max-w-[52ch] text-[16px] leading-relaxed text-dim">
+                Bawa perangkatnya ke {site.address.line2}. Diagnosa gratis, dan
+                kamu tetap boleh pulang tanpa perbaikan.
+              </p>
+            </div>
 
-          <div className="flex flex-col items-start gap-5 md:col-span-5 md:justify-center">
-            <ButtonLink
-              href={waLink(
-                "Halo Nexora Data, saya belum tahu kerusakan perangkat saya. Bisa dibantu diagnosa?",
-              )}
-              tone="on-blue"
-            >
-              Chat WhatsApp
-            </ButtonLink>
-
-            <Link
-              href="/#estimasi"
-              className="text-[15px] font-semibold text-white underline decoration-white/60 decoration-2 underline-offset-4"
-            >
-              Cek estimasi biaya
-            </Link>
-
-            <a
-              href={`tel:+${site.phone.intl}`}
-              className="font-display text-[clamp(1.4rem,2.2vw,1.9rem)] font-semibold tracking-[-0.02em] text-white underline decoration-white/60 decoration-2 underline-offset-4"
-            >
-              {site.phone.display}
-            </a>
+            <div className="flex flex-wrap items-center gap-4">
+              <a
+                href={waLink(
+                  "Halo Nexora Data, saya belum tahu kerusakan perangkat saya. Bisa dibantu diagnosa?",
+                )}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 rounded-full bg-electric px-6 py-3.5 text-[15px] font-semibold text-white transition-colors hover:bg-white hover:text-navy"
+              >
+                <WhatsAppIcon className="h-5 w-5" />
+                Chat WhatsApp
+              </a>
+              <a
+                href={`tel:+${site.phone.intl}`}
+                className="text-[15px] font-semibold text-white underline underline-offset-4"
+              >
+                {site.phone.display}
+              </a>
+            </div>
           </div>
         </div>
       </Section>

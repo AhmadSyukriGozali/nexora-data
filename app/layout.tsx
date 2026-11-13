@@ -1,11 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
-import { Cursor } from "@/components/motion/cursor";
 import { MotionProvider } from "@/components/motion/motion-provider";
-import { RouteWipe } from "@/components/motion/route-wipe";
-import { SiteFooter } from "@/components/site-footer";
-import { SiteHeader } from "@/components/site-header";
 import { SiteChrome } from "@/components/site-chrome";
 import { site } from "@/lib/site";
 import { localBusinessJsonLd } from "@/lib/structured-data";
@@ -93,7 +89,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#061024",
+  themeColor: "#f6f7f9",
   colorScheme: "light",
 };
 
@@ -117,7 +113,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           }}
         />
       </head>
-      <body className="min-h-full bg-navy text-chrome">
+      <body className="min-h-full bg-paper text-ink">
         <MotionProvider>
           <a
             href="#konten"
@@ -125,16 +121,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           >
             Lompat ke konten
           </a>
-          <div aria-hidden="true" className="grain" />
-          <SiteChrome>
-            <SiteHeader />
-          </SiteChrome>
-          <main id="konten">{children}</main>
-          <SiteChrome>
-            <SiteFooter />
-          </SiteChrome>
-          <RouteWipe />
-          <Cursor />
+          <SiteChrome>{children}</SiteChrome>
         </MotionProvider>
       </body>
     </html>

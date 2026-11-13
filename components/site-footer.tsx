@@ -3,99 +3,105 @@ import Link from "next/link";
 import { imageCredits } from "@/lib/media";
 import { mapsLinkUrl, site, waDefault } from "@/lib/site";
 
+const navLinks = [
+  { href: "/layanan", label: "Layanan" },
+  { href: "/tarif", label: "Tarif" },
+  { href: "/tentang", label: "Tentang" },
+  { href: "/faq", label: "FAQ" },
+  { href: "/cek-status", label: "Cek status servis" },
+  { href: "/kontak", label: "Kontak" },
+];
+
 export function SiteFooter() {
   return (
-    <footer data-chapter="light" className="bg-paper text-ink">
-      <div className="container-page py-20 md:py-24">
-        <div className="flex flex-col gap-12 lg:flex-row lg:items-start lg:justify-between">
-          <div className="max-w-[420px]">
-            <Image
-              src="/brand/logo-wordmark.png"
-              alt="Nexora Data"
-              width={679}
-              height={264}
-              className="h-auto w-full max-w-[340px]"
-            />
-            <p className="mt-7 text-[17px] leading-relaxed text-ink-soft">
-              Servis HP, laptop, PC, dan printer di Pulo Gebang. Diagnosa gratis,
-              harga disepakati sebelum dikerjakan, bergaransi {site.guarantee}.
+    <footer className="border-t border-line bg-white text-ink">
+      <div className="container-page py-14 md:py-20">
+        <div className="grid gap-12 lg:grid-cols-[1.1fr_0.7fr_0.9fr] lg:gap-16">
+          <div>
+            <Link href="/" aria-label={`${site.name}, beranda`}>
+              <Image
+                src="/brand/logo-wordmark.png"
+                alt="Nexora Data"
+                width={679}
+                height={264}
+                className="h-auto w-full max-w-[260px]"
+              />
+            </Link>
+            <p className="mt-6 max-w-[38ch] text-[15px] leading-relaxed text-ink-soft">
+              Servis HP, laptop, PC, dan printer di Pulo Gebang. Diagnosa
+              gratis, harga disepakati sebelum dikerjakan, bergaransi{" "}
+              {site.guarantee}.
             </p>
             <a
               href={waDefault}
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-8 inline-flex bg-ink px-6 py-3.5 text-[15px] font-semibold text-white transition-colors hover:bg-electric"
+              className="mt-7 inline-flex items-center rounded-full bg-electric px-5 py-3 text-[14px] font-semibold text-white transition-colors hover:bg-navy"
             >
               Chat WhatsApp
             </a>
           </div>
 
-          <div className="grid flex-1 gap-10 sm:grid-cols-2 lg:max-w-[620px] lg:grid-cols-3">
-            <div>
-              <h2 className="text-[15px] font-semibold text-ink-soft">
-                Lokasi
-              </h2>
-              <address className="mt-4 not-italic text-[15px] leading-relaxed">
-                {site.address.line1}
-                <br />
-                {site.address.line2}
-                <br />
-                {site.address.city} {site.address.postal}
-              </address>
-              <a
-                href={mapsLinkUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-3 inline-block text-[15px] font-semibold underline decoration-electric decoration-2 underline-offset-4"
-              >
-                Buka di Google Maps
-              </a>
-            </div>
+          <nav aria-label="Navigasi footer">
+            <h2 className="text-[13px] font-semibold uppercase tracking-[0.12em] text-ink-soft">
+              Halaman
+            </h2>
+            <ul className="mt-4 space-y-2.5">
+              {navLinks.map((link) => (
+                <li key={link.href}>
+                  <Link
+                    href={link.href}
+                    className="text-[15px] text-ink transition-colors hover:text-electric"
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </nav>
 
-            <div>
-              <h2 className="text-[15px] font-semibold text-ink-soft">
-                Jam buka
-              </h2>
-              <p className="mt-4 text-[15px] leading-relaxed">
-                {site.hours.days}
-                <br />
-                {site.hours.open} – {site.hours.close}
-              </p>
-              <p className="mt-3 text-[15px] leading-relaxed text-ink-soft">
-                {site.hours.note}
-              </p>
-            </div>
+          <div>
+            <h2 className="text-[13px] font-semibold uppercase tracking-[0.12em] text-ink-soft">
+              Kunjungi
+            </h2>
+            <address className="mt-4 not-italic text-[15px] leading-relaxed text-ink">
+              {site.address.line1}
+              <br />
+              {site.address.line2}
+              <br />
+              {site.address.city} {site.address.postal}
+            </address>
+            <a
+              href={mapsLinkUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-2 inline-block text-[15px] font-semibold text-electric underline underline-offset-4"
+            >
+              Buka di Google Maps
+            </a>
 
-            <div>
-              <h2 className="text-[15px] font-semibold text-ink-soft">
-                Kontak
-              </h2>
-              <a
-                href={`tel:+${site.phone.intl}`}
-                className="mt-4 block text-[15px] font-semibold"
-              >
-                {site.phone.display}
-              </a>
-              <a
-                href={site.instagram.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-2 block text-[15px] underline decoration-electric decoration-2 underline-offset-4"
-              >
-                {site.instagram.handle}
-              </a>
-              <Link href="/kontak" className="mt-2 block text-[15px]">
-                Formulir kontak
-              </Link>
-              <Link href="/cek-status" className="mt-2 block text-[15px]">
-                Cek status servis
-              </Link>
-            </div>
+            <p className="mt-5 text-[15px] leading-relaxed text-ink">
+              {site.hours.days}, {site.hours.open}–{site.hours.close}
+            </p>
+            <a
+              href={`tel:+${site.phone.intl}`}
+              className="mt-2 block text-[15px] font-semibold text-ink"
+            >
+              {site.phone.display}
+            </a>
+            <a
+              href={site.instagram.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-2 block text-[15px] text-ink-soft underline underline-offset-4"
+            >
+              {site.instagram.handle}
+            </a>
           </div>
         </div>
 
-        <div className="mt-16 flex flex-col gap-6 text-[14px] leading-relaxed text-ink-soft">
-          <p className="max-w-[52ch]">
+        <div className="mt-12 border-t border-line pt-6 text-[13px] leading-relaxed text-ink-soft">
+          <p className="max-w-[72ch]">
             Foto di situs ini berasal dari koleksi terbuka dan hanya
             menggambarkan dunia servis, bukan perangkat atau tim Nexora Data:{" "}
             {imageCredits.map((credit, index) => (
@@ -115,7 +121,7 @@ export function SiteFooter() {
             .
           </p>
 
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="mt-5 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <p>
               © 2026 {site.name}. Semua harga adalah estimasi dan dikonfirmasi
               setelah diagnosa.

@@ -2,7 +2,6 @@
 
 import { AnimatePresence, motion } from "motion/react";
 import { useState } from "react";
-import { Magnetic } from "@/components/motion/magnetic";
 import { cn } from "@/lib/cn";
 import { deviceOrder, estimates, type DeviceKey } from "@/lib/content";
 import { ease, spring } from "@/lib/motion";
@@ -143,19 +142,16 @@ export function Estimate() {
             {data.note} Harga final ditentukan setelah pemeriksaan langsung.
           </p>
 
-          <Magnetic className="mt-9">
-            <a
-              href={waLink(
-                `Halo Nexora Data, saya mau servis ${data.full.toLowerCase()} dengan keluhan: ${item.issue}. Estimasi di situs ${item.price}. Bisa dibantu?`,
-              )}
-              target="_blank"
-              rel="noopener noreferrer"
-              data-cursor="Kirim pesan"
-              className="inline-flex bg-electric px-6 py-4 text-[15px] font-semibold text-white transition-colors hover:bg-white hover:text-ink"
-            >
-              Tanya lewat WhatsApp
-            </a>
-          </Magnetic>
+          <a
+            href={waLink(
+              `Halo Nexora Data, saya mau servis ${data.full.toLowerCase()} dengan keluhan: ${item.issue}. Estimasi di situs ${item.price}. Bisa dibantu?`,
+            )}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-9 inline-flex rounded-full bg-electric px-6 py-3.5 text-[15px] font-semibold text-white transition-colors hover:bg-white hover:text-navy"
+          >
+            Tanya lewat WhatsApp
+          </a>
         </div>
 
         <p className="mt-5 text-[14px] leading-relaxed text-ink-soft">

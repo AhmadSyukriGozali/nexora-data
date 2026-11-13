@@ -41,31 +41,25 @@ export function Testimonials() {
   if (!items || items.length === 0) return null;
 
   return (
-    <Section tone="paper" className="section-pad">
-      <div className="container-page">
+    <Section tone="paper">
+      <div className="container-page section-pad">
         <Reveal>
-          <p className="text-[13px] font-semibold uppercase tracking-[0.2em] text-electric">
+          <h2 className="display-lg text-[clamp(1.8rem,3.2vw,2.6rem)] text-ink">
             Kata pelanggan
-          </p>
-        </Reveal>
-
-        <Reveal delay={60}>
-          <h2 className="mt-4 font-display text-[clamp(1.8rem,3.4vw,3rem)] font-semibold tracking-[-0.02em] text-ink">
-            Servis yang mereka percayakan
           </h2>
         </Reveal>
 
-        <div className="mt-10 grid gap-px border border-ink/10 bg-ink/10 md:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {items.map((item, index) => (
             <Reveal
               key={`${item.name}-${item.created_at}`}
               delay={index * 40}
-              className="bg-paper"
+              className="h-full"
             >
-              <figure className="flex h-full flex-col gap-4 p-6 sm:p-7">
+              <figure className="flex h-full flex-col rounded-2xl border border-line bg-white p-6">
                 <div
                   aria-label={`${item.rating} dari 5 bintang`}
-                  className="font-mono text-[13px] tracking-[0.2em] text-electric"
+                  className="text-[13px] tracking-[0.2em] text-electric"
                 >
                   {"★".repeat(item.rating)}
                   <span className="text-ink/20">
@@ -73,11 +67,11 @@ export function Testimonials() {
                   </span>
                 </div>
 
-                <blockquote className="text-[15px] leading-relaxed text-ink-soft">
+                <blockquote className="mt-4 text-[15px] leading-relaxed text-ink-soft">
                   {item.message}
                 </blockquote>
 
-                <figcaption className="mt-auto text-[13px] text-ink-soft">
+                <figcaption className="mt-auto pt-5 text-[13px] text-ink-soft">
                   <span className="font-semibold text-ink">{item.name}</span>
                   {" · "}
                   <time dateTime={item.created_at}>
