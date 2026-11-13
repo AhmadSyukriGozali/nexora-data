@@ -110,6 +110,36 @@ menolaknya.
 Kalau perlu kembali ke versi aplikasi lama, lakukan **setelah** migrasi di atas,
 bukan sebaliknya.
 
+## Migrasi fitur order (012–013)
+
+Dijalankan setelah `011`, urut, file utuh seperti di atas.
+
+| Urutan | File | Isi |
+|---|---|---|
+| 6 | `012_order_equipment.sql` | Kolom `service_orders.equipment` (jsonb, maks 10 item), constraint bentuk, trigger teknisi menolak perubahan `equipment` |
+| 7 | `013_service_photos.sql` | Tabel `service_attachments`, RLS per-penugasan, bucket privat `service-photos`, policy Storage |
+
+Verifikasi:
+
+```sql
+-- 012: kolom kelengkapan unit
+select column_name from information_schema.columns
+where table_schema = 'public' and table_name = 'service_orders'
+  and column_name = 'equipment';
+
+-- 013: tabel, bucket, dan policy storage
+select to_regclass('public.service_attachments');
+select id, public from storage.buckets where id = 'service-photos';
+select policyname from pg_policies
+where schemaname = 'storage' and policyname like 'service_photos_%';
+```
+
+`013` butuh `has_permission()` (dari `006`) dan `is_admin_or_owner()` (dari
+`009`). Bucket dibuat oleh SQL yang sama; tidak perlu klik manual di dashboard.
+Rollback `013`: hapus tabel dan policy, lalu
+`delete from storage.buckets where id = 'service-photos';` setelah berkas
+dihapus. Rollback `012` aman selama tidak ada kode yang membaca `equipment`.
+
 ## Urutan deploy
 
 1. Jalankan `007` → `011` di Supabase.
