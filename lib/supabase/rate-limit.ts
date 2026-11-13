@@ -1,50 +1,27 @@
-type Bucket = {
-  count: number;
-  resetAt: number;
-};
-
-const buckets = new Map<string, Bucket>();
-
-const MAX_BUCKETS = 5_000;
-
-function prune(now: number) {
-  if (buckets.size < MAX_BUCKETS) return;
-
-  for (const [key, bucket] of buckets) {
-    if (bucket.resetAt <= now) {
-      buckets.delete(key);
-    }
-  }
-}
+import { createSupabaseServerClient } from "./server";
 
 /**
- * Rate limit in-memory sederhana per instance server (cukup untuk mencegah
- * tebak-tebakan tiket pada satu region Vercel). Untuk skala besar, ganti
- * dengan penyimpanan bersama (mis. tabel/Redis) — di luar scope.
+ * Rate limit bersama lewat tabel `rate_limits` (migrasi 010). Gagal membaca
+ * database dianggap ditolak supaya endpoint tidak terbuka tanpa batas.
  */
-export function rateLimit(
+export async function rateLimit(
   key: string,
   limit: number,
   windowMs: number,
-): { ok: boolean; retryAfterSeconds: number } {
-  const now = Date.now();
-  prune(now);
+): Promise<{ ok: boolean; retryAfterSeconds: number }> {
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase
+    .rpc("consume_rate_limit", {
+      p_key: key,
+      p_limit: limit,
+      p_window_ms: windowMs,
+    })
+    .single<{ allowed: boolean; retry_after_seconds: number }>();
 
-  const existing = buckets.get(key);
-
-  if (!existing || existing.resetAt <= now) {
-    buckets.set(key, { count: 1, resetAt: now + windowMs });
-    return { ok: true, retryAfterSeconds: 0 };
+  if (error || !data) {
+    console.error("rate limit error:", error);
+    return { ok: false, retryAfterSeconds: 30 };
   }
 
-  existing.count += 1;
-
-  if (existing.count > limit) {
-    return {
-      ok: false,
-      retryAfterSeconds: Math.max(1, Math.ceil((existing.resetAt - now) / 1000)),
-    };
-  }
-
-  return { ok: true, retryAfterSeconds: 0 };
+  return { ok: data.allowed, retryAfterSeconds: data.retry_after_seconds };
 }
