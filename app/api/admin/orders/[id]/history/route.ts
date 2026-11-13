@@ -1,3 +1,4 @@
+import { canAccessOrder } from "@/lib/admin/order-access";
 import { getStaffSession } from "@/lib/supabase/auth";
 import { dbErrorResponse, jsonError, jsonOk, parseQuery } from "@/lib/supabase/http";
 import { paginationQuerySchema, uuidParamSchema } from "@/lib/supabase/schemas";
@@ -18,6 +19,18 @@ export async function GET(request: Request, context: Context) {
 
   const { limit, offset } = query.data;
   const supabase = await createSupabaseServerClient();
+
+  const { data: order, error: orderError } = await supabase
+    .from("service_orders")
+    .select("assigned_technician_id")
+    .eq("id", parsedId.data)
+    .maybeSingle<{ assigned_technician_id: string | null }>();
+
+  const orderMapped = dbErrorResponse(orderError);
+  if (orderMapped) return orderMapped;
+  if (!order || !canAccessOrder(session.role, session.userId, order)) {
+    return jsonError("Order servis tidak ditemukan", 404);
+  }
 
   const { data, error, count } = await supabase
     .from("service_status_history")

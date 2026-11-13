@@ -1,3 +1,4 @@
+import { logAudit } from "@/lib/admin/audit";
 import { canManualInvoiceTransition } from "@/lib/admin/status-flow";
 import type { InvoiceStatus } from "@/lib/admin/types";
 import {
@@ -91,6 +92,15 @@ export async function PATCH(request: Request, context: Context) {
   const mapped = dbErrorResponse(error);
   if (mapped) return mapped;
   if (!data) return jsonError("Invoice tidak ditemukan", 404);
+
+  if (body.data.status === "batal") {
+    await logAudit({
+      action: "invoice.cancel",
+      entity: "invoices",
+      entityId: data.id,
+      metadata: { invoice_number: data.invoice_number },
+    });
+  }
 
   return jsonOk(data);
 }

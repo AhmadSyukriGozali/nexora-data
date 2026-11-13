@@ -4,6 +4,7 @@ import { useState, type FormEvent } from "react";
 
 import { cn } from "@/lib/cn";
 import { waLink } from "@/lib/site";
+import { TICKET_NUMBER_PLACEHOLDER } from "@/lib/tickets/ticket-number";
 
 type ServiceStatus =
   | "masuk"
@@ -179,7 +180,7 @@ export function OrderStatusChecker() {
             autoCapitalize="characters"
             spellCheck={false}
             maxLength={24}
-            placeholder="NXD-2611-0001"
+            placeholder={TICKET_NUMBER_PLACEHOLDER}
             value={ticket}
             onChange={(event) =>
               setTicket(event.target.value.toUpperCase().replace(/\s+/g, ""))

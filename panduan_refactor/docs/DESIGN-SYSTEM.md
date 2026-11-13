@@ -9,23 +9,36 @@ Corporate Tech Modern dengan karakter:
 - cepat dipahami pelanggan awam;
 - konsisten antara halaman publik dan dashboard internal.
 
-## 2. Warna dari PRD
+## 2. Warna
+
+Token aktual ada di `app/globals.css` (`--color-*`). Ini yang dipakai situs dan
+dashboard saat ini:
 
 | Token | Value | Peran |
 |---|---|---|
-| `deep-navy` | `#061E47` | Warna utama |
-| `deep-navy-alt` | `#0A2E6E` | Variasi navy |
-| `tech-blue` | `#1D63DC` | Aksen |
-| `tech-blue-alt` | `#2563EB` | Aksen alternatif |
-| `emerald` | `#22C55E` | CTA utama |
-| `emerald-alt` | `#16A34A` | CTA/ikon sukses |
-| `white` | `#FFFFFF` | Surface |
-| `surface` | `#F1F5F9` | Background |
-| `dashboard-card` | `#F8FAFC` | Kartu statistik dashboard |
+| `navy` | `#061024` | Latar gelap utama (hero, footer) |
+| `navy-soft` | `#0A1730` | Variasi navy |
+| `surface` | `#0D1C36` | Panel di atas navy |
+| `paper` | `#F6F7F9` | Background halaman terang |
+| `paper-deep` | `#E9EDF2` | Background sekunder |
+| `card` | `#FFFFFF` | Permukaan kartu |
+| `ink` | `#0B1220` | Teks utama |
+| `ink-soft` | `#475569` | Teks sekunder |
+| `line` | `#E2E8F0` | Garis dan batas |
+| `electric` | `#1E5EFF` | Aksen utama, CTA, focus ring |
+| `electric-soft` | `#4F8BFF` | Aksen hover/sekunder |
+| `chrome` | `#EEF2F7` | Latar kontrol |
+| `dim` | `#9AA8BC` | Teks redup di latar gelap |
+| `live` | `#16A34A` | Status sukses/aktif |
+
+Palet PRD (`deep-navy #061E47`, `tech-blue #1D63DC`, `emerald #22C55E`) adalah
+usulan awal, bukan acuan implementasi. Jangan mengganti token visual yang sudah
+dipakai tanpa keputusan desain baru.
 
 ## 3. Tipografi dan bentuk
 
-- Plus Jakarta Sans atau Inter; pilihan final mengikuti audit font dan kebutuhan performa.
+- Judul dan angka besar: **Sora** (`--font-display`).
+- Teks isi dan UI: **Plus Jakarta Sans** (`--font-sans`).
 - Heading tegas dengan hirarki jelas.
 - Spacing antar-section konsisten.
 - Kartu `rounded-xl` atau `rounded-2xl`.

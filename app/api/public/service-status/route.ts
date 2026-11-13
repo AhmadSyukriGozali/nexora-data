@@ -1,3 +1,4 @@
+import { toPublicStatus } from "@/lib/public/tracking";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getClientIp, jsonError, jsonOk, parseBody } from "@/lib/supabase/http";
 import { rateLimit } from "@/lib/supabase/rate-limit";
@@ -23,7 +24,7 @@ function tooManyRequests(retryAfterSeconds: number) {
 
 export async function POST(request: Request) {
   const ip = getClientIp(request);
-  const ipLimit = rateLimit(`status:ip:${ip}`, 20, 10 * 60_000);
+  const ipLimit = await rateLimit(`status:ip:${ip}`, 20, 10 * 60_000);
   if (!ipLimit.ok) return tooManyRequests(ipLimit.retryAfterSeconds);
 
   const body = await parseBody(request, publicServiceStatusSchema);
@@ -32,7 +33,7 @@ export async function POST(request: Request) {
   const { ticket_number, phone_last4 } = body.data;
 
   // Batasi juga per tiket agar satu tiket tidak bisa ditebak berkali-kali.
-  const ticketLimit = rateLimit(
+  const ticketLimit = await rateLimit(
     `status:ticket:${ticket_number}`,
     10,
     10 * 60_000,
@@ -95,10 +96,12 @@ export async function POST(request: Request) {
   }
 
   // Hanya field aman: tiket, jenis perangkat, status, estimasi selesai.
-  return jsonOk({
-    ticket_number: order.ticket_number,
-    device_type: device?.device_type ?? null,
-    status: order.status,
-    estimated_finish_at: order.estimated_finish_at,
-  });
+  return jsonOk(
+    toPublicStatus({
+      ticket_number: order.ticket_number,
+      device_type: device?.device_type ?? null,
+      status: order.status,
+      estimated_finish_at: order.estimated_finish_at,
+    }),
+  );
 }

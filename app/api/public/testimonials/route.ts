@@ -58,7 +58,7 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const ipLimit = rateLimit(
+  const ipLimit = await rateLimit(
     `testimonial:ip:${getClientIp(request)}`,
     5,
     60 * 60_000,

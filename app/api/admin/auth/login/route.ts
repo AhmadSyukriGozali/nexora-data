@@ -4,7 +4,7 @@ import { loginSchema } from "@/lib/supabase/schemas";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export async function POST(request: Request) {
-  const limit = rateLimit(`admin-login:${getClientIp(request)}`, 10, 5 * 60_000);
+  const limit = await rateLimit(`admin-login:${getClientIp(request)}`, 10, 5 * 60_000);
   if (!limit.ok) {
     return jsonError("Terlalu banyak percobaan login. Coba lagi nanti.", 429);
   }
@@ -38,7 +38,11 @@ export async function POST(request: Request) {
     return jsonError("Akun tidak aktif atau bukan staf", 403);
   }
 
-  if (profile.role !== "owner" && profile.role !== "admin") {
+  if (
+    profile.role !== "owner" &&
+    profile.role !== "admin" &&
+    profile.role !== "teknisi"
+  ) {
     await supabase.auth.signOut();
     return jsonError("Akun tidak memiliki akses admin", 403);
   }

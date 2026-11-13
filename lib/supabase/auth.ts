@@ -1,20 +1,20 @@
 import { NextResponse } from "next/server";
 
 import {
-  EMPTY_PERMISSIONS,
   FULL_PERMISSIONS,
   can,
-  rowsToPermissions,
   type Module,
   type PermissionAction,
   type PermissionRow,
   type Permissions,
 } from "@/lib/admin/access";
+import { resolvePermissions } from "@/lib/admin/permissions-resolve";
+import type { StaffRole } from "@/lib/admin/types";
 
 import { jsonError } from "./http";
 import { createSupabaseServerClient } from "./server";
 
-export type StaffRole = "owner" | "admin";
+export type { StaffRole };
 
 export type StaffSession = {
   userId: string;
@@ -30,7 +30,9 @@ type ProfileRow = {
   is_active: boolean;
 };
 
-/** Sesi admin yang valid: user login + profil aktif + role owner/admin. */
+const STAFF_ROLES: readonly string[] = ["owner", "admin", "teknisi"];
+
+/** Sesi admin yang valid: user login + profil aktif + role staf. */
 export async function getStaffSession(): Promise<StaffSession | null> {
   const supabase = await createSupabaseServerClient();
 
@@ -50,30 +52,39 @@ export async function getStaffSession(): Promise<StaffSession | null> {
   if (error || !data || !data.is_active) return null;
 
   const role = data.role;
-  if (role !== "owner" && role !== "admin") return null;
+  if (!STAFF_ROLES.includes(role)) return null;
 
-  let permissions = EMPTY_PERMISSIONS;
-  if (role === "owner") {
-    permissions = FULL_PERMISSIONS;
-  } else {
-    const { data: rows, error: permError } = await supabase
+  const staffRole = role as StaffRole;
+
+  if (staffRole !== "owner") {
+    const { data: permRows, error: permError } = await supabase
       .from("staff_permissions")
       .select("module, can_view, can_manage, can_delete, can_view_cost")
       .eq("profile_id", user.id);
 
-    // Tabel bisa belum ada bila migrasi 006 belum dijalankan. Jangan kunci
-    // semua staf keluar karena urutan deploy; fallback ke akses lama.
-    permissions = permError
-      ? FULL_PERMISSIONS
-      : rowsToPermissions((rows ?? []) as PermissionRow[]);
+    // Fail closed: query izin gagal tidak boleh memberi akses penuh.
+    const permissions = resolvePermissions(
+      staffRole,
+      (permRows ?? []) as PermissionRow[],
+      permError,
+    );
+    if (!permissions) return null;
+
+    return {
+      userId: user.id,
+      email: user.email ?? null,
+      role: staffRole,
+      fullName: data.full_name ?? "",
+      permissions,
+    };
   }
 
   return {
     userId: user.id,
     email: user.email ?? null,
-    role,
+    role: staffRole,
     fullName: data.full_name ?? "",
-    permissions,
+    permissions: FULL_PERMISSIONS,
   };
 }
 

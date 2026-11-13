@@ -36,6 +36,12 @@ function staffLabel(member: StaffMember): string {
   return member.full_name || member.email || member.id;
 }
 
+const ROLE_LABELS: Record<StaffRole, string> = {
+  owner: "Owner",
+  admin: "Admin",
+  teknisi: "Teknisi",
+};
+
 function memberPermissions(member: StaffMember): Permissions {
   if (member.role === "owner") {
     return Object.fromEntries(
@@ -388,16 +394,14 @@ export function StaffManager({
     }
     if (pending.kind === "role") {
       return {
-        title:
-          pending.role === "owner"
-            ? `Jadikan ${staffLabel(pending.member)} owner?`
-            : `Turunkan ${staffLabel(pending.member)} ke admin?`,
+        title: `Ubah role ${staffLabel(pending.member)} ke ${
+          ROLE_LABELS[pending.role]
+        }?`,
         description:
           pending.role === "owner"
             ? "Owner punya akses penuh ke semua modul termasuk Staf. Izin per modul staf ini akan dihapus."
-            : "Izin per modul akan dihapus. Atur ulang lewat Atur akses setelah role berubah.",
-        confirmLabel:
-          pending.role === "owner" ? "Jadikan owner" : "Turunkan ke admin",
+            : "Izin akun akan direset ke preset role ini.",
+        confirmLabel: `Jadikan ${ROLE_LABELS[pending.role].toLowerCase()}`,
         tone: "default" as const,
       };
     }
@@ -411,10 +415,14 @@ export function StaffManager({
   })();
 
   const adminCount = members.filter((member) => member.role === "admin").length;
+  const ownerCount = members.filter((member) => member.role === "owner").length;
+  const technicianCount = members.filter(
+    (member) => member.role === "teknisi",
+  ).length;
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-2.5 @2xl/main:grid-cols-3">
+      <div className="grid grid-cols-2 gap-2.5 @2xl/main:grid-cols-4">
         <Card>
           <p className="text-[10.5px] uppercase tracking-[0.14em] text-[color:var(--bjork-text-soft)]">
             Total akun
@@ -431,12 +439,20 @@ export function StaffManager({
             {adminCount}
           </p>
         </Card>
-        <Card className="col-span-2 @2xl/main:col-span-1">
+        <Card>
+          <p className="text-[10.5px] uppercase tracking-[0.14em] text-[color:var(--bjork-text-soft)]">
+            Teknisi
+          </p>
+          <p className="mt-2 font-display text-2xl font-bold tabular-nums">
+            {technicianCount}
+          </p>
+        </Card>
+        <Card>
           <p className="text-[10.5px] uppercase tracking-[0.14em] text-[color:var(--bjork-text-soft)]">
             Owner
           </p>
           <p className="mt-2 font-display text-2xl font-bold tabular-nums">
-            {members.length - adminCount}
+            {ownerCount}
           </p>
         </Card>
       </div>
@@ -489,9 +505,13 @@ export function StaffManager({
                     autoComplete="off"
                   />
                 </Field>
-                <Field label="Role">
+                <Field
+                  label="Role"
+                  hint="Izin akun mengikuti preset role. Role admin bisa disesuaikan setelah dibuat."
+                >
                   <select name="role" className={inputClass} defaultValue="admin">
                     <option value="admin">Admin</option>
+                    <option value="teknisi">Teknisi</option>
                     <option value="owner">Owner</option>
                   </select>
                 </Field>
@@ -610,6 +630,9 @@ export function StaffManager({
                           {member.role === "owner" ? (
                             <Badge tone="amber">Owner</Badge>
                           ) : null}
+                          {member.role === "teknisi" ? (
+                            <Badge tone="blue">Teknisi</Badge>
+                          ) : null}
                         </div>
                         <p className="text-[11.5px] text-[color:var(--bjork-text-muted)]">
                           {member.email ?? "—"}
@@ -687,24 +710,22 @@ export function StaffManager({
                           >
                             {member.is_active ? "Nonaktifkan" : "Aktifkan"}
                           </button>
-                          <button
-                            type="button"
-                            className={buttonSmall}
+                          <select
+                            className={`${inputClass} w-auto py-1 text-xs`}
+                            value={member.role}
                             disabled={isSelf}
-                            onClick={() => {
+                            aria-label={`Role ${staffLabel(member)}`}
+                            onChange={(event) => {
+                              const role = event.target.value as StaffRole;
+                              if (role === member.role) return;
                               setActionError(null);
-                              setPending({
-                                kind: "role",
-                                member,
-                                role:
-                                  member.role === "owner" ? "admin" : "owner",
-                              });
+                              setPending({ kind: "role", member, role });
                             }}
                           >
-                            {member.role === "owner"
-                              ? "Jadikan admin"
-                              : "Jadikan owner"}
-                          </button>
+                            <option value="owner">Owner</option>
+                            <option value="admin">Admin</option>
+                            <option value="teknisi">Teknisi</option>
+                          </select>
                           <button
                             type="button"
                             className={buttonSmallDanger}

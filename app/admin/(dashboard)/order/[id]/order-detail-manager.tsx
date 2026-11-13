@@ -30,12 +30,16 @@ export function OrderDetailManager({
   canDelete,
   canCancel,
   hasInvoice,
+  canAssign,
+  technicians,
 }: {
   order: Order;
   canManage: boolean;
   canDelete: boolean;
   canCancel: boolean;
   hasInvoice: boolean;
+  canAssign: boolean;
+  technicians: { id: string; full_name: string }[];
 }) {
   const router = useRouter();
   const [target, setTarget] = useState<ServiceStatus | null>(null);
@@ -87,14 +91,23 @@ export function OrderDetailManager({
     setEditBusy(true);
 
     const form = new FormData(event.currentTarget);
-    const payload = {
-      complaint: textValue(form.get("complaint")),
-      diagnosis: emptyToNull(form.get("diagnosis")),
-      estimated_finish_at: fromJakartaInput(
-        textValue(form.get("estimated_finish_at")),
-      ),
-      total_amount: numberValue(form.get("total_amount"), 0),
-    };
+    const payload = canAssign
+      ? {
+          complaint: textValue(form.get("complaint")),
+          diagnosis: emptyToNull(form.get("diagnosis")),
+          estimated_finish_at: fromJakartaInput(
+            textValue(form.get("estimated_finish_at")),
+          ),
+          total_amount: numberValue(form.get("total_amount"), 0),
+          assigned_technician_id:
+            textValue(form.get("assigned_technician_id")) || null,
+        }
+      : {
+          diagnosis: emptyToNull(form.get("diagnosis")),
+          estimated_finish_at: fromJakartaInput(
+            textValue(form.get("estimated_finish_at")),
+          ),
+        };
 
     const result = await apiRequest<Order>(`/api/admin/orders/${order.id}`, {
       method: "PATCH",
@@ -250,21 +263,25 @@ export function OrderDetailManager({
         <Card>
           <h2 className="text-[13.5px] font-semibold">Ubah detail order</h2>
           <p className="mt-0.5 text-[12px] text-[color:var(--bjork-text-muted)]">
-            Perbarui keluhan, diagnosa, estimasi selesai, dan biaya.
+            {canAssign
+              ? "Perbarui keluhan, diagnosa, estimasi selesai, biaya, dan teknisi."
+              : "Perbarui diagnosa dan estimasi selesai."}
           </p>
 
           <form onSubmit={handleEdit} className="mt-4 space-y-4">
-            <Field label="Keluhan">
-              <textarea
-                name="complaint"
-                className={inputClass}
-                rows={3}
-                required
-                minLength={3}
-                maxLength={2000}
-                defaultValue={order.complaint}
-              />
-            </Field>
+            {canAssign ? (
+              <Field label="Keluhan">
+                <textarea
+                  name="complaint"
+                  className={inputClass}
+                  rows={3}
+                  required
+                  minLength={3}
+                  maxLength={2000}
+                  defaultValue={order.complaint}
+                />
+              </Field>
+            ) : null}
 
             <Field label="Diagnosa">
               <textarea
@@ -285,16 +302,38 @@ export function OrderDetailManager({
               />
             </Field>
 
-            <Field label="Estimasi biaya (Rp)">
-              <input
-                name="total_amount"
-                type="number"
-                min={0}
-                step={1000}
-                className={inputClass}
-                defaultValue={order.total_amount}
-              />
-            </Field>
+            {canAssign ? (
+              <Field label="Estimasi biaya (Rp)">
+                <input
+                  name="total_amount"
+                  type="number"
+                  min={0}
+                  step={1000}
+                  className={inputClass}
+                  defaultValue={order.total_amount}
+                />
+              </Field>
+            ) : null}
+
+            {canAssign ? (
+              <Field
+                label="Teknisi"
+                hint="Hanya teknisi yang ditugaskan yang bisa membuka order ini."
+              >
+                <select
+                  name="assigned_technician_id"
+                  className={inputClass}
+                  defaultValue={order.assigned_technician_id ?? ""}
+                >
+                  <option value="">Belum ditugaskan</option>
+                  {technicians.map((technician) => (
+                    <option key={technician.id} value={technician.id}>
+                      {technician.full_name}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+            ) : null}
 
             <FormError message={editError} />
 

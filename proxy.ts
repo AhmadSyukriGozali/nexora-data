@@ -88,7 +88,9 @@ async function guardAdmin(request: NextRequest) {
 
   const isStaff =
     profile?.is_active === true &&
-    (profile.role === "owner" || profile.role === "admin");
+    (profile.role === "owner" ||
+      profile.role === "admin" ||
+      profile.role === "teknisi");
 
   if (!isStaff) {
     return NextResponse.redirect(new URL("/admin/login", request.url));

@@ -3,6 +3,10 @@
 import { useState, type FormEvent } from "react";
 
 import { cn } from "@/lib/cn";
+import {
+  TICKET_NUMBER_PLACEHOLDER,
+  isTicketNumber,
+} from "@/lib/tickets/ticket-number";
 
 const fieldClass =
   "w-full border border-white/12 bg-white/[0.06] px-4 py-3.5 text-[16px] " +
@@ -45,8 +49,8 @@ export function TestimonialForm() {
     }
 
     const ticketNumber = ticket.trim().toUpperCase();
-    if (ticketNumber && !/^NXD-[0-9]{4}-[0-9]{4,}$/.test(ticketNumber)) {
-      setError("Format nomor tiket seperti NXD-2611-0001.");
+    if (ticketNumber && !isTicketNumber(ticketNumber)) {
+      setError(`Format nomor tiket seperti ${TICKET_NUMBER_PLACEHOLDER}.`);
       return;
     }
 
@@ -171,7 +175,7 @@ export function TestimonialForm() {
             autoCapitalize="characters"
             spellCheck={false}
             maxLength={24}
-            placeholder="NXD-2611-0001"
+            placeholder={TICKET_NUMBER_PLACEHOLDER}
             value={ticket}
             onChange={(event) =>
               setTicket(event.target.value.toUpperCase().replace(/\s+/g, ""))
