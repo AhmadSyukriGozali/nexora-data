@@ -14,6 +14,7 @@ import {
 } from "@/components/admin/form-controls";
 import { Card, ServiceStatusBadge } from "@/components/admin/ui";
 import { apiRequest } from "@/lib/admin/client-api";
+import { equipmentFromFormData } from "@/lib/admin/equipment";
 import { emptyToNull, numberValue, textValue } from "@/lib/admin/form-utils";
 import {
   fromJakartaInput,
@@ -23,6 +24,8 @@ import {
 import { ORDER_SEQUENCE, nextOrderStatuses } from "@/lib/admin/status-flow";
 import type { Order, ServiceStatus } from "@/lib/admin/types";
 import { cn } from "@/lib/cn";
+
+import { EquipmentField } from "../equipment-field";
 
 export function OrderDetailManager({
   order,
@@ -101,6 +104,10 @@ export function OrderDetailManager({
           total_amount: numberValue(form.get("total_amount"), 0),
           assigned_technician_id:
             textValue(form.get("assigned_technician_id")) || null,
+          equipment: equipmentFromFormData(
+            (name) => form.get(name),
+            (name) => form.getAll(name),
+          ),
         }
       : {
           diagnosis: emptyToNull(form.get("diagnosis")),
@@ -333,6 +340,10 @@ export function OrderDetailManager({
                   ))}
                 </select>
               </Field>
+            ) : null}
+
+            {canAssign ? (
+              <EquipmentField initial={order.equipment ?? []} showReturned />
             ) : null}
 
             <FormError message={editError} />

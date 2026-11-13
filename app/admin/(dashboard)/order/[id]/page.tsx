@@ -65,6 +65,7 @@ export default async function OrderDetailPage({ params }: Context) {
   } | null;
 
   const canAssign = session.role !== "teknisi";
+  const equipment = order.equipment ?? [];
   const technicians = canAssign
     ? ((
         await supabase
@@ -166,6 +167,23 @@ export default async function OrderDetailPage({ params }: Context) {
                   {order.technician?.full_name ?? "Belum ditugaskan"}
                 </p>
               </div>
+
+              {equipment.length > 0 ? (
+                <div className="sm:col-span-2">
+                  <p className="text-[10.5px] uppercase tracking-[0.14em] text-[color:var(--bjork-text-soft)]">
+                    Kelengkapan unit
+                  </p>
+                  <p className="mt-1 text-sm text-[color:var(--bjork-text)]">
+                    {equipment
+                      .map((item) => `${item.returned ? "✓" : "○"} ${item.label}`)
+                      .join(" · ")}
+                  </p>
+                  <p className="mt-0.5 text-[11px] text-[color:var(--bjork-text-muted)]">
+                    {equipment.filter((item) => item.returned).length}/
+                    {equipment.length} bawaan dikembalikan
+                  </p>
+                </div>
+              ) : null}
             </div>
 
             <div className="mt-5 space-y-4 border-t border-[color:var(--bjork-border)] pt-4">
