@@ -75,7 +75,8 @@ lalu tunggu beberapa detik dan ulangi permintaan.
 | Pesan | Penyebab | Tindakan |
 |---|---|---|
 | `TICKET_SEQUENCE_EXHAUSTED` | Nomor urut bulanan sudah lewat 999 | Tunggu periode `YYMM` berikutnya. Jika perlu lebih dari 999 tiket/bulan, longgarkan batas di `next_ticket_number()` dan constraint (minimal 4 digit sudah diterima pola). |
-| `ORDER_FIELD_FORBIDDEN` | Teknisi mencoba mengubah `total_amount`, `customer_id`, `device_id`, `complaint`, atau `assigned_technician_id` | Bukan bug. Field itu hanya untuk owner/admin. |
+| `ORDER_FIELD_FORBIDDEN` | Teknisi mencoba mengubah `total_amount`, `customer_id`, `device_id`, `complaint`, `equipment`, `assigned_technician_id`, atau menyerahkan unit (`diambil`) | Bukan bug. Field itu hanya untuk owner/admin. |
+| `WARRANTY_DURATION_REQUIRED` | Penyerahan unit tanpa `warranty_days` (1–3650 hari) | Isi durasi garansi di dialog penyerahan; tidak ada default. |
 | `new row violates check constraint "service_orders_ticket_format"` | Format tiket di luar pola | Pakai `NXD-YYMM-XXX-YYYY` atau format lama `NXD-YYMM-XXXX`. |
 | `permission denied for table rate_limits` | Klien memanggil tabel langsung | Rate limit hanya lewat `consume_rate_limit()` (grant execute untuk `anon`/`authenticated`). |
 | `permission denied for function consume_rate_limit` | Migrasi `010` belum jalan | Jalankan `010`. |
@@ -110,7 +111,7 @@ menolaknya.
 Kalau perlu kembali ke versi aplikasi lama, lakukan **setelah** migrasi di atas,
 bukan sebaliknya.
 
-## Migrasi fitur order (012–013)
+## Migrasi fitur order (012–014)
 
 Dijalankan setelah `011`, urut, file utuh seperti di atas.
 
@@ -118,6 +119,7 @@ Dijalankan setelah `011`, urut, file utuh seperti di atas.
 |---|---|---|
 | 6 | `012_order_equipment.sql` | Kolom `service_orders.equipment` (jsonb, maks 10 item), constraint bentuk, trigger teknisi menolak perubahan `equipment` |
 | 7 | `013_service_photos.sql` | Tabel `service_attachments`, RLS per-penugasan, bucket privat `service-photos`, policy Storage |
+| 8 | `014_warranty_on_pickup.sql` | `change_order_status` versi baru: penyerahan wajib durasi garansi, hanya owner/admin, garansi dibuat atomik |
 
 Verifikasi:
 
@@ -132,6 +134,12 @@ select to_regclass('public.service_attachments');
 select id, public from storage.buckets where id = 'service-photos';
 select policyname from pg_policies
 where schemaname = 'storage' and policyname like 'service_photos_%';
+
+-- 014: signature fungsi status yang baru
+select pg_get_function_identity_arguments(p.oid)
+from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+where n.nspname = 'public' and p.proname = 'change_order_status';
+-- Harus memuat p_warranty_days dan p_warranty_terms.
 ```
 
 `013` butuh `has_permission()` (dari `006`) dan `is_admin_or_owner()` (dari
@@ -139,6 +147,8 @@ where schemaname = 'storage' and policyname like 'service_photos_%';
 Rollback `013`: hapus tabel dan policy, lalu
 `delete from storage.buckets where id = 'service-photos';` setelah berkas
 dihapus. Rollback `012` aman selama tidak ada kode yang membaca `equipment`.
+Rollback `014` butuh membuat ulang `change_order_status` versi 3 argumen dari
+`001` sebelum kode lama dipakai lagi.
 
 ## Urutan deploy
 

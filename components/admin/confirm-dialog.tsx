@@ -16,6 +16,7 @@ export function ConfirmDialog({
   cancelLabel = "Batal",
   tone = "default",
   busy = false,
+  confirmDisabled = false,
   children,
   onConfirm,
   onClose,
@@ -27,6 +28,7 @@ export function ConfirmDialog({
   cancelLabel?: string;
   tone?: "default" | "danger";
   busy?: boolean;
+  confirmDisabled?: boolean;
   children?: ReactNode;
   onConfirm: () => void;
   onClose: () => void;
@@ -117,7 +119,7 @@ export function ConfirmDialog({
             type="button"
             data-autofocus
             onClick={onConfirm}
-            disabled={busy}
+            disabled={busy || confirmDisabled}
             className={cn(
               "inline-flex min-h-9 items-center justify-center rounded-lg px-4 text-[13px] font-semibold transition-[filter,opacity] disabled:opacity-60",
               tone === "danger"

@@ -153,6 +153,8 @@ export const orderUpdateSchema = z.strictObject({
 export const orderStatusSchema = z.strictObject({
   status: serviceStatusSchema,
   note: z.string().trim().max(500).nullish(),
+  warranty_days: z.number().int().min(1).max(3650).optional(),
+  warranty_terms: z.string().trim().max(1000).nullish(),
 });
 
 export const ordersQuerySchema = z.strictObject({

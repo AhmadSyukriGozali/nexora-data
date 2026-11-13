@@ -27,6 +27,13 @@ import { cn } from "@/lib/cn";
 
 import { EquipmentField } from "../equipment-field";
 
+const QC_PRESETS = [
+  "Unit menyala",
+  "Fungsi utama diuji",
+  "Unit bersih",
+  "Kelengkapan sesuai catatan",
+] as const;
+
 export function OrderDetailManager({
   order,
   canManage,
@@ -47,6 +54,10 @@ export function OrderDetailManager({
   const router = useRouter();
   const [target, setTarget] = useState<ServiceStatus | null>(null);
   const [statusNote, setStatusNote] = useState("");
+  const [qcChecks, setQcChecks] = useState<string[]>([]);
+  const [qcExtra, setQcExtra] = useState("");
+  const [warrantyDays, setWarrantyDays] = useState("");
+  const [warrantyTerms, setWarrantyTerms] = useState("");
   const [statusError, setStatusError] = useState<string | null>(null);
   const [statusBusy, setStatusBusy] = useState(false);
 
@@ -55,15 +66,43 @@ export function OrderDetailManager({
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteBusy, setDeleteBusy] = useState(false);
 
-  const options = nextOrderStatuses(order.status);
+  const options = nextOrderStatuses(order.status).filter(
+    (status) => status !== "diambil" || canAssign,
+  );
   const forward = options.filter((status) => status !== "batal");
   const cancellable = options.includes("batal");
   const seqIndex = ORDER_SEQUENCE.indexOf(order.status);
 
+  const needsQc = target === "selesai";
+  const needsWarranty = target === "diambil";
+  const qcReady = qcChecks.length > 0 || qcExtra.trim() !== "";
+  const warrantyReady =
+    !needsWarranty ||
+    (Number(warrantyDays) >= 1 && Number(warrantyDays) <= 3650);
+  const statusReady = (!needsQc || qcReady) && warrantyReady;
+
+  function closeStatusDialog() {
+    setTarget(null);
+    setStatusNote("");
+    setQcChecks([]);
+    setQcExtra("");
+    setWarrantyDays("");
+    setWarrantyTerms("");
+  }
+
   async function handleStatus() {
-    if (!target) return;
+    if (!target || !statusReady) return;
     setStatusError(null);
     setStatusBusy(true);
+
+    const noteParts: string[] = [];
+    if (needsQc) {
+      noteParts.push(`QC: ${qcChecks.join("; ") || "-"}`);
+      if (qcExtra.trim()) noteParts.push(`QC tambahan: ${qcExtra.trim()}`);
+    }
+    if (statusNote.trim()) noteParts.push(statusNote.trim());
+    // Kolom note dibatasi 500 karakter.
+    const note = noteParts.join(". ").slice(0, 500);
 
     const result = await apiRequest<Order>(
       `/api/admin/orders/${order.id}/status`,
@@ -71,7 +110,13 @@ export function OrderDetailManager({
         method: "POST",
         body: JSON.stringify({
           status: target,
-          note: emptyToNull(statusNote),
+          note: note || null,
+          ...(needsWarranty
+            ? {
+                warranty_days: Number(warrantyDays),
+                warranty_terms: emptyToNull(warrantyTerms),
+              }
+            : {}),
         }),
       },
     );
@@ -83,8 +128,7 @@ export function OrderDetailManager({
       return;
     }
 
-    setTarget(null);
-    setStatusNote("");
+    closeStatusDialog();
     router.refresh();
   }
 
@@ -398,13 +442,88 @@ export function OrderDetailManager({
         }
         tone={target === "batal" ? "danger" : "default"}
         busy={statusBusy}
+        confirmDisabled={!statusReady}
         onClose={() => {
           if (statusBusy) return;
-          setTarget(null);
-          setStatusNote("");
+          closeStatusDialog();
         }}
         onConfirm={handleStatus}
       >
+        {needsQc ? (
+          <div className="mb-3">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[color:var(--bjork-text-muted)]">
+              Checklist QC
+            </p>
+            <div className="mt-2 flex flex-col gap-1.5">
+              {QC_PRESETS.map((label) => (
+                <label
+                  key={label}
+                  className="flex items-center gap-2 text-[13px] text-[color:var(--bjork-text)]"
+                >
+                  <input
+                    type="checkbox"
+                    checked={qcChecks.includes(label)}
+                    onChange={(event) =>
+                      setQcChecks((prev) =>
+                        event.target.checked
+                          ? [...prev, label]
+                          : prev.filter((item) => item !== label),
+                      )
+                    }
+                    className="size-4 accent-[var(--bjork-accent)]"
+                  />
+                  {label}
+                </label>
+              ))}
+            </div>
+            <div className="mt-2">
+              <Field label="Poin QC tambahan (opsional)">
+                <input
+                  value={qcExtra}
+                  onChange={(event) => setQcExtra(event.target.value)}
+                  maxLength={150}
+                  className={inputClass}
+                  placeholder="Contoh: kipas dibersihkan."
+                />
+              </Field>
+            </div>
+            {!qcReady ? (
+              <p className="mt-1 text-[11px] text-[color:var(--blk-warning)]">
+                Centang minimal satu poin atau isi poin tambahan.
+              </p>
+            ) : null}
+          </div>
+        ) : null}
+
+        {needsWarranty ? (
+          <div className="mb-3 space-y-3">
+            <Field
+              label="Durasi garansi (hari)"
+              hint="Wajib diisi, tanpa default. 1–3650 hari."
+            >
+              <input
+                type="number"
+                min={1}
+                max={3650}
+                value={warrantyDays}
+                onChange={(event) => setWarrantyDays(event.target.value)}
+                className={inputClass}
+                placeholder="Contoh: 30"
+              />
+            </Field>
+            <Field label="Syarat garansi (opsional)">
+              <textarea
+                rows={2}
+                maxLength={1000}
+                value={warrantyTerms}
+                onChange={(event) => setWarrantyTerms(event.target.value)}
+                className={inputClass}
+                placeholder="Contoh: tidak berlaku untuk kerusakan akibat cairan."
+              />
+            </Field>
+          </div>
+        ) : null}
+
         {target !== "batal" ? (
           <Field label="Catatan (opsional)">
             <textarea
