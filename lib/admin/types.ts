@@ -1,3 +1,5 @@
+import type { EquipmentItem } from "./equipment";
+
 export type StaffRole = "owner" | "admin" | "teknisi";
 
 export type DeviceType = "hp" | "laptop" | "pc" | "printer";
@@ -59,6 +61,7 @@ export type Order = {
   estimated_finish_at: string | null;
   total_amount: number;
   assigned_technician_id: string | null;
+  equipment: EquipmentItem[];
   created_at: string;
   customer?: {
     full_name: string;
