@@ -7,6 +7,7 @@ import { TestimonialForm } from "@/components/testimonial-form";
 import { ButtonLink } from "@/components/ui/button-link";
 import { Section } from "@/components/ui/section";
 import { site, waDefault } from "@/lib/site";
+import { TICKET_NUMBER_PLACEHOLDER } from "@/lib/tickets/ticket-number";
 
 export const metadata: Metadata = {
   title: "Cek Status Servis",
@@ -84,9 +85,9 @@ export default function CekStatusPage() {
                   Nomor tiket ada di struk servis
                 </p>
                 <p className="mt-1 max-w-[42ch] text-[14px] leading-relaxed text-dim">
-                  Formatnya seperti NXD-2611-0001. Kalau struk hilang, hubungi
-                  admin lewat WhatsApp dengan menyebutkan nama dan perangkat
-                  Anda.
+                  Formatnya seperti {TICKET_NUMBER_PLACEHOLDER}. Kalau struk
+                  hilang, hubungi admin lewat WhatsApp dengan menyebutkan nama
+                  dan perangkat Anda.
                 </p>
               </div>
             </Reveal>
