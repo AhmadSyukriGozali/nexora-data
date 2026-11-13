@@ -125,6 +125,9 @@ export default async function OrderDetailPage({ params }: Context) {
         <Link href="/admin/order" className={buttonGhost}>
           Kembali
         </Link>
+        <Link href={`/admin/nota/${order.id}`} className={buttonGhost}>
+          Cetak nota
+        </Link>
         {invoice ? (
           <Link href={`/admin/invoice/${invoice.id}`} className={buttonPrimary}>
             Lihat invoice
