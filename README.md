@@ -9,37 +9,64 @@ Dibangun dengan Next.js 16 (App Router), React 19, TypeScript, dan Tailwind CSS 
 
 ```bash
 npm install
+# buat .env.local: NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY,
+# SUPABASE_SERVICE_ROLE_KEY (service role hanya untuk server)
 npm run dev      # http://localhost:3000
 npm run build    # build produksi
 npm run start    # jalankan hasil build
+npm test         # vitest (unit test murni, tanpa database)
+npx tsc --noEmit # cek tipe
 npx eslint .     # cek gaya kode
 ```
+
+Skema database dan migrasi ada di `supabase/migrations/` (`001`–`011`), dijalankan
+manual lewat Supabase SQL Editor. Urutan, verifikasi, dan rollback:
+`docs/runbooks/2026-11-13-foundation-migrations.md`.
 
 ## Struktur
 
 ```
 app/
-  page.tsx              komposisi beranda
-  layanan/page.tsx      rincian layanan per perangkat
-  kontak/page.tsx       kontak, formulir, dan peta
+  page.tsx              beranda
+  layanan/ tarif/ faq/ tentang/ kontak/   halaman publik
+  cek-status/           pelacakan tiket publik
+  selamat-datang/       welcome gate kunjungan pertama
+  admin/                login + dashboard (order, pelanggan, perangkat,
+                        sparepart, invoice, garansi, testimoni, staf)
+  api/admin/            Route Handler admin (cek sesi + izin per route)
+  api/public/           testimoni + pelacakan status (rate limited)
   layout.tsx            font, metadata, header/footer, JSON-LD bisnis
-  template.tsx          transisi antarhalaman
   globals.css           token warna, tipografi, animasi
+proxy.ts                welcome gate + guard sesi /admin/*
 components/
   home/                 satu komponen per bagian beranda
+  admin/                shell dashboard, form control, tabel, dialog
   ui/                   primitif bersama: Section, ButtonLink
   estimate.tsx          kalkulator estimasi biaya (interaktif)
   contact-form.tsx      formulir yang menyusun pesan WhatsApp
   site-header.tsx       header tetap + menu seluler
   site-footer.tsx       kontak, kredit foto, dan copyright
-  reveal.tsx            animasi muncul saat digulir
 lib/
   site.ts               identitas bisnis, alamat, WhatsApp, peta
   content.ts            daftar layanan, proses, estimasi harga, FAQ
+  admin/                izin modul, alur status, format, helper API klien
+  tickets/              pola kode servis NXD-YYMM-XXX-YYYY
+  public/               mapper respons tracking publik
+  supabase/             klien server/browser, auth, skema zod, rate limit
   media.ts              kredit foto dan foto suasana
   structured-data.ts    JSON-LD LocalBusiness dan FAQPage
-  cn.ts                 penggabung className
+scripts/
+  verify-ticket-concurrency.mjs   uji 20 tiket paralel (butuh env Supabase)
 ```
+
+## Peran staf
+
+- **Owner** — akses penuh, termasuk menu Staf dan harga modal.
+- **Admin** — mengikuti izin per modul yang diatur owner.
+- **Teknisi** — hanya order yang ditugaskan; boleh mengubah diagnosa, estimasi
+  selesai, dan status. Tidak bisa membuat/menghapus order, melihat invoice,
+  testimoni, atau biaya.
+
 
 ## Mengubah konten
 

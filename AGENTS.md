@@ -17,11 +17,12 @@ Situs publik + dashboard admin untuk servis HP/laptop/PC/printer di Cakung, Jaka
 ```bash
 npm run dev            # dev server (Turbopack)
 npm run build          # verifikasi produksi
+npm test               # vitest (unit test murni)
 npx tsc --noEmit       # typecheck
 npx eslint .           # lint (package.json: lint = "eslint")
 ```
 
-Tidak ada test suite. Verifikasi = `tsc --noEmit` + `eslint` (+ `build` untuk perubahan struktur halaman/Route Handler).
+Verifikasi = `npm test` + `tsc --noEmit` + `eslint` (+ `build` untuk perubahan struktur halaman/Route Handler).
 
 ## Arsitektur
 
@@ -33,15 +34,17 @@ Tidak ada test suite. Verifikasi = `tsc --noEmit` + `eslint` (+ `build` untuk pe
 
 ## Supabase
 
-- `supabase/migrations/001..006` = sumber kebenaran skema: `counters`, `profiles`, `customers`, `devices`, `service_orders`, `service_status_history`, `spareparts`, `stock_movements`, `sparepart_costs`, `invoices`, `invoice_items`, `payments`, `service_warranties`, `testimonials`, `staff_permissions`. RLS ada di `002`. Jika mengubah skema, tulis migrasi baru — jangan ubah migrasi lama.
+- `supabase/migrations/001..011` = sumber kebenaran skema: `counters`, `profiles`, `customers`, `devices`, `service_orders`, `service_status_history`, `spareparts`, `stock_movements`, `sparepart_costs`, `invoices`, `invoice_items`, `payments`, `service_warranties`, `testimonials`, `staff_permissions`, `rate_limits`, `audit_logs`. RLS ada di `002` + penyesuaian di `006`/`009`. Jika mengubah skema, tulis migrasi baru — jangan ubah migrasi lama. Urutan deploy: migrasi dulu, kode sesudahnya (lihat `docs/runbooks/2026-11-13-foundation-migrations.md`).
 - Klien Supabase di `lib/supabase/`: `server.ts` (server component/Route Handler), `client.ts` (browser), `auth.ts` (`getStaffSession`, `requirePermission`). Jangan buat instance sendiri.
-- Env (lihat `.env.example`): `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`. Akses lewat helper `lib/supabase/env.ts` (error jelas jika kosong). Service role key **hanya server, jangan pernah `NEXT_PUBLIC_`**.
-- Rate limit endpoint publik memakai `lib/supabase/rate-limit.ts` (in-memory per instance; cukup untuk satu region Vercel).
+- Env di `.env.local` (di-gitignore): `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`. Akses lewat helper `lib/supabase/env.ts` (error jelas jika kosong). Service role key **hanya server, jangan pernah `NEXT_PUBLIC_`**.
+- Rate limit endpoint publik memakai `lib/supabase/rate-limit.ts` → RPC `consume_rate_limit` (migrasi `010`), jadi batas berlaku lintas instance. Gagal query = tolak (fail closed).
 
 ## Aturan domain (jangan dikarang sendiri)
 
 - **Alur status order/invoice** disimpan di `lib/admin/status-flow.ts` (`ORDER_FLOW`, `INVOICE_FLOW`) sebagai satu sumber kebenaran untuk UI, API, dan trigger DB (migrasi `005`). `lunas` untuk invoice hanya dihasilkan otomatis oleh sistem pembayaran — tidak boleh dipilih staf.
+- **Kode servis** berformat `NXD-YYMM-XXX-YYYY` (contoh `NXD-2611-001-K9M4`); format lama `NXD-YYMM-XXXX` tetap diterima saat pelacakan. Validasi klien/server memakai `lib/tickets/ticket-number.ts`, generator ada di migrasi `007`.
 - **Permission** di `lib/admin/access.ts`: modul × `view/manage/delete/viewCost`. `viewCost` menyembunyikan harga modal dari admin; modul `staf` hanya untuk owner. Guard halaman: `requireStaffPage()` / `requireOwnerPage()` di `lib/admin/guard.ts`.
+- **Role teknisi** hanya melihat order dengan `assigned_technician_id` = dirinya (RLS `009` + `lib/admin/order-access.ts`) dan hanya boleh mengubah `diagnosis`, `estimated_finish_at`, `status`; trigger DB menolak field lain dengan `ORDER_FIELD_FORBIDDEN`. Aksi sensitif dicatat lewat `lib/admin/audit.ts` ke `audit_logs`.
 
 ## Gotcha Next.js
 
@@ -50,6 +53,6 @@ Tidak ada test suite. Verifikasi = `tsc --noEmit` + `eslint` (+ `build` untuk pe
 ## Referensi lain
 
 - `README.md` — struktur file & checklist "sebelum publikasi" (harga, `site.url`, foto placeholder Wikimedia, koordinat peta).
-- `referensi_audit/docs/` — PRD, ARCHITECTURE, DATABASE, DESIGN-SYSTEM, SECURITY, DEVELOPMENT-ROADMAP.
+- `panduan_refactor/docs/` — PRD, ARCHITECTURE, DATABASE, DESIGN-SYSTEM, SECURITY, DEVELOPMENT-ROADMAP.
 - `.taste-skill/` hanya artefak skill desain (screenshot & direction), bukan kode app — jangan diubah.
 - Path alias `@/*` = root repo (`tsconfig.json`).
