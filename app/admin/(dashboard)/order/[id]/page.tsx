@@ -67,7 +67,10 @@ export default async function OrderDetailPage({ params }: Context) {
   } | null;
 
   const canAssign = session.role !== "teknisi";
-  const canUpload = canAssign || order.assigned_technician_id === session.userId;
+  const canManageOrders = can(session.permissions, "orders", "manage");
+  const canUpload =
+    canManageOrders &&
+    (canAssign || order.assigned_technician_id === session.userId);
   const equipment = order.equipment ?? [];
 
   const attachmentsResult = await supabase
@@ -77,6 +80,9 @@ export default async function OrderDetailPage({ params }: Context) {
     .order("created_at", { ascending: true });
 
   const attachmentRows = (attachmentsResult.data ?? []) as OrderAttachment[];
+  if (attachmentsResult.error) {
+    console.error("foto order gagal dimuat:", attachmentsResult.error);
+  }
   const signedUrls = attachmentRows.length
     ? await supabase.storage
         .from(ATTACHMENT_BUCKET)
@@ -85,6 +91,9 @@ export default async function OrderDetailPage({ params }: Context) {
           3600,
         )
     : null;
+  if (signedUrls?.error) {
+    console.error("signed URL foto gagal:", signedUrls.error);
+  }
   const urlByPath = new Map(
     (signedUrls?.data ?? []).map((entry) => [entry.path, entry.signedUrl]),
   );
@@ -247,7 +256,7 @@ export default async function OrderDetailPage({ params }: Context) {
             orderId={order.id}
             attachments={attachments}
             canUpload={canUpload}
-            canDelete={canAssign}
+            canDelete={canManageOrders && canAssign}
           />
 
           <Card>

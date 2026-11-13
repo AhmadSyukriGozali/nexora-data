@@ -94,45 +94,53 @@ function PhotoGroup({
     body.append("kind", kind);
     body.append("file", file);
 
-    const response = await fetch(`/api/admin/orders/${orderId}/attachments`, {
-      method: "POST",
-      body,
-    });
-    const payload = (await response.json().catch(() => null)) as
-      | { error?: { message?: string } }
-      | null;
+    try {
+      const response = await fetch(`/api/admin/orders/${orderId}/attachments`, {
+        method: "POST",
+        body,
+      });
+      const payload = (await response.json().catch(() => null)) as
+        | { error?: { message?: string } }
+        | null;
 
-    setBusy(false);
+      if (!response.ok) {
+        setError(payload?.error?.message ?? "Gagal mengunggah foto.");
+        return;
+      }
 
-    if (!response.ok) {
-      setError(payload?.error?.message ?? "Gagal mengunggah foto.");
-      return;
+      router.refresh();
+    } catch {
+      setError("Gagal menghubungi server. Coba lagi.");
+    } finally {
+      setBusy(false);
     }
-
-    router.refresh();
   }
 
   async function handleDelete(id: string) {
     setBusy(true);
     setError(null);
 
-    const response = await fetch(
-      `/api/admin/orders/${orderId}/attachments/${id}`,
-      { method: "DELETE" },
-    );
-    const payload = (await response.json().catch(() => null)) as
-      | { error?: { message?: string } }
-      | null;
+    try {
+      const response = await fetch(
+        `/api/admin/orders/${orderId}/attachments/${id}`,
+        { method: "DELETE" },
+      );
+      const payload = (await response.json().catch(() => null)) as
+        | { error?: { message?: string } }
+        | null;
 
-    setBusy(false);
-    setConfirmId(null);
+      if (!response.ok) {
+        setError(payload?.error?.message ?? "Gagal menghapus foto.");
+        return;
+      }
 
-    if (!response.ok) {
-      setError(payload?.error?.message ?? "Gagal menghapus foto.");
-      return;
+      router.refresh();
+    } catch {
+      setError("Gagal menghubungi server. Coba lagi.");
+    } finally {
+      setBusy(false);
+      setConfirmId(null);
     }
-
-    router.refresh();
   }
 
   return (

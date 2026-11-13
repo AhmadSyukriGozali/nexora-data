@@ -6,7 +6,9 @@ create table if not exists public.service_attachments (
   kind text not null check (kind in ('before', 'after')),
   storage_path text not null unique,
   uploaded_by uuid references public.profiles (id) on delete set null,
-  created_at timestamptz not null default now()
+  created_at timestamptz not null default now(),
+  constraint service_attachments_path_shape
+    check (storage_path like order_id::text || '/' || kind || '/%')
 );
 
 create index if not exists service_attachments_order_idx
@@ -16,6 +18,7 @@ alter table public.service_attachments enable row level security;
 revoke all on public.service_attachments from anon;
 grant select, insert, delete on public.service_attachments to authenticated;
 
+drop policy if exists service_attachments_select_staff on public.service_attachments;
 create policy service_attachments_select_staff on public.service_attachments
 for select to authenticated
 using (
@@ -27,6 +30,7 @@ using (
   )
 );
 
+drop policy if exists service_attachments_insert_staff on public.service_attachments;
 create policy service_attachments_insert_staff on public.service_attachments
 for insert to authenticated
 with check (
@@ -38,15 +42,23 @@ with check (
   )
 );
 
+drop policy if exists service_attachments_delete_admin on public.service_attachments;
 create policy service_attachments_delete_admin on public.service_attachments
 for delete to authenticated
 using (public.has_permission('orders', 'manage') and public.is_admin_or_owner());
 
 -- Bucket privat; berkas diunggah lewat Route Handler dengan sesi staf.
-insert into storage.buckets (id, name, public)
-values ('service-photos', 'service-photos', false)
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values (
+  'service-photos',
+  'service-photos',
+  false,
+  5242880,
+  array['image/jpeg', 'image/png', 'image/webp']
+)
 on conflict (id) do nothing;
 
+drop policy if exists service_photos_select_staff on storage.objects;
 create policy service_photos_select_staff on storage.objects
 for select to authenticated
 using (
@@ -60,6 +72,7 @@ using (
   )
 );
 
+drop policy if exists service_photos_insert_staff on storage.objects;
 create policy service_photos_insert_staff on storage.objects
 for insert to authenticated
 with check (
@@ -72,6 +85,7 @@ with check (
   )
 );
 
+drop policy if exists service_photos_delete_admin on storage.objects;
 create policy service_photos_delete_admin on storage.objects
 for delete to authenticated
 using (

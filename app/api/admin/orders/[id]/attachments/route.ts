@@ -3,6 +3,7 @@ import {
   ATTACHMENT_BUCKET,
   ATTACHMENT_KINDS,
   MAX_ATTACHMENTS_PER_KIND,
+  MAX_ATTACHMENT_BYTES,
   attachmentPath,
   validateAttachment,
   type AttachmentKind,
@@ -14,6 +15,7 @@ import {
   jsonOk,
 } from "@/lib/supabase/http";
 import { uuidParamSchema } from "@/lib/supabase/schemas";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 type Context = { params: Promise<{ id: string }> };
@@ -32,15 +34,22 @@ export async function POST(request: Request, context: Context) {
 
   const supabase = await createSupabaseServerClient();
 
-  const { data: order } = await supabase
+  const { data: order, error: orderError } = await supabase
     .from("service_orders")
     .select("assigned_technician_id")
     .eq("id", orderId)
     .maybeSingle();
 
+  const mappedOrder = dbErrorResponse(orderError);
+  if (mappedOrder) return mappedOrder;
   if (!order) return jsonError("Order tidak ditemukan", 404);
   if (!canAccessOrder(session.role, session.userId, order)) {
     return jsonError("Akses ditolak", 403);
+  }
+
+  const contentLength = Number(request.headers.get("content-length") ?? 0);
+  if (contentLength > MAX_ATTACHMENT_BYTES + 64 * 1024) {
+    return jsonError("Ukuran foto maksimal 5 MB.", 413);
   }
 
   const form = await request.formData().catch(() => null);
@@ -58,6 +67,8 @@ export async function POST(request: Request, context: Context) {
   const invalid = validateAttachment(file);
   if (invalid) return jsonError(invalid, 422);
 
+  // shortcut: hitung-lalu-simpan bisa balapan pada unggahan paralel, jadi
+  // batas 6 bisa lewat 1–2. Tambah lock/trigger kalau ini jadi masalah.
   const { count } = await supabase
     .from("service_attachments")
     .select("id", { count: "exact", head: true })
@@ -72,7 +83,10 @@ export async function POST(request: Request, context: Context) {
   }
 
   const path = attachmentPath(orderId, kind, file.type);
-  const { error: uploadError } = await supabase.storage
+  // Storage diakses dengan service role setelah otorisasi di atas, supaya
+  // pembersihan berkas tidak bergantung pada policy Storage.
+  const storage = createSupabaseAdminClient();
+  const { error: uploadError } = await storage.storage
     .from(ATTACHMENT_BUCKET)
     .upload(path, file, { contentType: file.type, upsert: false });
 
@@ -90,7 +104,10 @@ export async function POST(request: Request, context: Context) {
     .single();
 
   if (error) {
-    await supabase.storage.from(ATTACHMENT_BUCKET).remove([path]);
+    const { error: cleanupError } = await storage.storage
+      .from(ATTACHMENT_BUCKET)
+      .remove([path]);
+    if (cleanupError) console.error("bersihkan foto gagal:", cleanupError);
     return dbErrorResponse(error) ?? jsonError("Gagal menyimpan foto", 400);
   }
 

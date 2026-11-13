@@ -3,6 +3,7 @@ import { ATTACHMENT_BUCKET } from "@/lib/admin/attachments";
 import { getStaffSession, requirePermission } from "@/lib/supabase/auth";
 import { dbErrorResponse, jsonError, jsonOk } from "@/lib/supabase/http";
 import { uuidParamSchema } from "@/lib/supabase/schemas";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 type Context = { params: Promise<{ id: string; attachmentId: string }> };
@@ -28,28 +29,35 @@ export async function DELETE(_request: Request, context: Context) {
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase
     .from("service_attachments")
-    .delete()
+    .select("id, storage_path")
     .eq("id", parsedAttachmentId.data)
     .eq("order_id", parsedId.data)
-    .select("id, storage_path")
     .maybeSingle();
 
   const mapped = dbErrorResponse(error);
   if (mapped) return mapped;
   if (!data) return jsonError("Foto tidak ditemukan", 404);
 
-  const { error: removeError } = await supabase.storage
-    .from(ATTACHMENT_BUCKET)
+  // Berkas dihapus lebih dulu supaya tidak ada objek yatim tanpa baris metadata.
+  const { error: removeError } = await createSupabaseAdminClient()
+    .storage.from(ATTACHMENT_BUCKET)
     .remove([data.storage_path]);
 
-  if (removeError) {
-    console.error("hapus berkas foto gagal:", removeError);
-  }
+  if (removeError) return jsonError("Gagal menghapus berkas foto", 400);
+
+  const { error: deleteError } = await supabase
+    .from("service_attachments")
+    .delete()
+    .eq("id", data.id);
+
+  const mappedDelete = dbErrorResponse(deleteError);
+  if (mappedDelete) return mappedDelete;
 
   await logAudit({
     action: "attachment.delete",
     entity: "service_attachment",
     entityId: data.id,
+    metadata: { order_id: parsedId.data },
   });
 
   return jsonOk({ deleted: true });
