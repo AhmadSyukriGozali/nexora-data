@@ -6,6 +6,7 @@ import { useState, type FormEvent } from "react";
 import { ConfirmDialog } from "@/components/admin/confirm-dialog";
 import {
   buttonDanger,
+  buttonGhost,
   buttonPrimary,
   Field,
   FormActions,
@@ -23,6 +24,7 @@ import {
 } from "@/lib/admin/format";
 import { ORDER_SEQUENCE, nextOrderStatuses } from "@/lib/admin/status-flow";
 import type { Order, ServiceStatus } from "@/lib/admin/types";
+import { waCustomerLink } from "@/lib/admin/whatsapp";
 import { cn } from "@/lib/cn";
 
 import { EquipmentField } from "../equipment-field";
@@ -72,6 +74,7 @@ export function OrderDetailManager({
   const forward = options.filter((status) => status !== "batal");
   const cancellable = options.includes("batal");
   const seqIndex = ORDER_SEQUENCE.indexOf(order.status);
+  const waHref = waCustomerLink(order);
 
   const needsQc = target === "selesai";
   const needsWarranty = target === "diambil";
@@ -302,6 +305,16 @@ export function OrderDetailManager({
         ) : null}
 
         <FormError message={statusError} />
+        {waHref ? (
+          <a
+            href={waHref}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={`${buttonGhost} mt-3`}
+          >
+            Update via WhatsApp
+          </a>
+        ) : null}
         {!canManage ? (
           <p className="mt-3 text-[12px] text-[color:var(--bjork-text-muted)]">
             Anda hanya bisa melihat order ini. Minta owner memberi izin kelola
