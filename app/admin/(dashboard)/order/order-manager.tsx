@@ -46,14 +46,14 @@ export function OrderManager({
   orders,
   customers,
   devices,
-  canManage,
   canDelete,
+  canCreate,
 }: {
   orders: Order[];
   customers: CustomerOption[];
   devices: Device[];
-  canManage: boolean;
   canDelete: boolean;
+  canCreate: boolean;
 }) {
   const router = useRouter();
   const [search, setSearch] = useState("");
@@ -201,14 +201,14 @@ export function OrderManager({
             ))}
           </select>
         </div>
-        {canManage ? (
+        {canCreate ? (
           <button type="button" onClick={openCreate} className={buttonPrimary}>
             Order baru
           </button>
         ) : null}
       </div>
 
-      {showForm && canManage ? (
+      {showForm && canCreate ? (
         <div id="order-form">
           <Card>
             <div className="mb-4 flex items-center justify-between">
@@ -360,6 +360,7 @@ export function OrderManager({
                   <th className="px-4 py-3 font-semibold">Pelanggan</th>
                   <th className="px-4 py-3 font-semibold">Perangkat</th>
                   <th className="px-4 py-3 font-semibold">Status</th>
+                  <th className="px-4 py-3 font-semibold">Teknisi</th>
                   <th className="px-4 py-3 font-semibold">Biaya</th>
                   <th className="px-4 py-3 font-semibold">Estimasi</th>
                   <th className="px-4 py-3 font-semibold">Masuk</th>
@@ -401,6 +402,9 @@ export function OrderManager({
                     </td>
                     <td className="px-4 py-3">
                       <ServiceStatusBadge status={order.status} />
+                    </td>
+                    <td className="whitespace-nowrap px-4 py-3 text-[color:var(--bjork-text-muted)]">
+                      {order.technician?.full_name ?? "—"}
                     </td>
                     <td className="whitespace-nowrap px-4 py-3 text-[color:var(--bjork-text-muted)]">
                       {formatRupiah(order.total_amount)}

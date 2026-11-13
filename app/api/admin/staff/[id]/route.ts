@@ -4,6 +4,9 @@ import {
   type PermissionRow,
   type PresetKey,
 } from "@/lib/admin/access";
+import { logAudit } from "@/lib/admin/audit";
+import { permissionRowsForRole } from "@/lib/admin/permission-rows";
+import type { StaffRole } from "@/lib/admin/types";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getStaffSession, ownerOnly } from "@/lib/supabase/auth";
 import { dbErrorResponse, jsonError, jsonOk, parseBody } from "@/lib/supabase/http";
@@ -77,7 +80,8 @@ export async function PATCH(request: Request, context: Context) {
 
   if (
     targetId === session.userId &&
-    (body.data.role === "admin" || body.data.is_active === false)
+    ((body.data.role !== undefined && body.data.role !== "owner") ||
+      body.data.is_active === false)
   ) {
     return jsonError(
       "Tidak bisa menurunkan role atau menonaktifkan akun sendiri.",
@@ -102,7 +106,8 @@ export async function PATCH(request: Request, context: Context) {
 
   const removesOwner =
     target.role === "owner" &&
-    (body.data.role === "admin" || body.data.is_active === false);
+    ((body.data.role !== undefined && body.data.role !== "owner") ||
+      body.data.is_active === false);
 
   if (removesOwner) {
     const { allowed, error: ownerError } = await hasAnotherActiveOwner(
@@ -116,7 +121,7 @@ export async function PATCH(request: Request, context: Context) {
     }
   }
 
-  const profilePatch: { role?: "owner" | "admin"; is_active?: boolean } = {};
+  const profilePatch: { role?: StaffRole; is_active?: boolean } = {};
   if (body.data.role !== undefined) profilePatch.role = body.data.role;
   if (body.data.is_active !== undefined) {
     profilePatch.is_active = body.data.is_active;
@@ -145,8 +150,21 @@ export async function PATCH(request: Request, context: Context) {
   }
 
   const becomesOwner = body.data.role === "owner";
+  const roleChanged =
+    body.data.role !== undefined && body.data.role !== target.role;
+
   if (becomesOwner) {
     const { error } = await removeStaffPermissions(admin, targetId);
+    const mapped = dbErrorResponse(error);
+    if (mapped) return mapped;
+  } else if (roleChanged) {
+    // Ganti role = reset izin ke preset role baru.
+    const { error } = await replaceStaffPermissions(
+      admin,
+      targetId,
+      permissionRowsForRole(body.data.role as StaffRole),
+      session.userId,
+    );
     const mapped = dbErrorResponse(error);
     if (mapped) return mapped;
   } else if (wantsPermissions) {
@@ -171,6 +189,16 @@ export async function PATCH(request: Request, context: Context) {
     if (mapped) return mapped;
     profile = data;
   }
+
+  await logAudit({
+    action: "staff.update",
+    entity: "profiles",
+    entityId: targetId,
+    metadata: {
+      role: body.data.role ?? null,
+      is_active: body.data.is_active ?? null,
+    },
+  });
 
   return jsonOk(profile);
 }

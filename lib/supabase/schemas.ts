@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import { MODULES } from "@/lib/admin/access";
+import { isTicketNumber } from "@/lib/tickets/ticket-number";
 
 /** Normalisasi nomor HP Indonesia menjadi digit saja (contoh: +62 815 → 0815). */
 export function normalizePhone(input: string): string {
@@ -132,6 +133,7 @@ export const orderUpdateSchema = z.strictObject({
   diagnosis: z.string().trim().max(2000).nullish(),
   estimated_finish_at: optionalTimestamp,
   total_amount: z.number().int().min(0).max(1_000_000_000_000).optional(),
+  assigned_technician_id: z.string().uuid().nullable().optional(),
 });
 
 export const orderStatusSchema = z.strictObject({
@@ -209,7 +211,7 @@ export const staffCreateSchema = z
     full_name: z.string().trim().min(2).max(120),
     mode: z.enum(["password", "invite"]).default("password"),
     password: z.string().min(8, "Password minimal 8 karakter").max(72).optional(),
-    role: z.enum(["owner", "admin"]).default("admin"),
+    role: z.enum(["owner", "admin", "teknisi"]).default("admin"),
     preset: presetSchema.optional(),
     permissions: z.array(permissionEntrySchema).max(MODULES.length).optional(),
   })
@@ -219,7 +221,7 @@ export const staffCreateSchema = z
   });
 
 export const staffUpdateSchema = z.strictObject({
-  role: z.enum(["owner", "admin"]).optional(),
+  role: z.enum(["owner", "admin", "teknisi"]).optional(),
   is_active: z.boolean().optional(),
   preset: presetSchema.optional(),
   permissions: z.array(permissionEntrySchema).max(MODULES.length).optional(),
@@ -313,11 +315,7 @@ const ticketNumberSchema = z
   .string()
   .trim()
   .transform((value) => value.toUpperCase())
-  .pipe(
-    z
-      .string()
-      .regex(/^NXD-[0-9]{4}-[0-9]{4,}$/, "Format nomor tiket tidak valid"),
-  );
+  .refine(isTicketNumber, "Format nomor tiket tidak valid");
 
 export const publicServiceStatusSchema = z.strictObject({
   ticket_number: ticketNumberSchema,

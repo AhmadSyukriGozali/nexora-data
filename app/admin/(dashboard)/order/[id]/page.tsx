@@ -33,7 +33,9 @@ export default async function OrderDetailPage({ params }: Context) {
 
   const { data: orderData } = await supabase
     .from("service_orders")
-    .select("*, customer:customers(*), device:devices(*)")
+    .select(
+      "*, customer:customers(*), device:devices(*), technician:profiles!assigned_technician_id(full_name)",
+    )
     .eq("id", id)
     .maybeSingle();
 
@@ -61,6 +63,18 @@ export default async function OrderDetailPage({ params }: Context) {
     invoice_number: string;
     status: string;
   } | null;
+
+  const canAssign = session.role !== "teknisi";
+  const technicians = canAssign
+    ? ((
+        await supabase
+          .from("profiles")
+          .select("id, full_name")
+          .eq("role", "teknisi")
+          .eq("is_active", true)
+          .order("full_name", { ascending: true })
+      ).data ?? [])
+    : [];
 
   return (
     <>
@@ -143,6 +157,15 @@ export default async function OrderDetailPage({ params }: Context) {
                   {formatRupiah(order.total_amount)}
                 </p>
               </div>
+
+              <div>
+                <p className="text-[10.5px] uppercase tracking-[0.14em] text-[color:var(--bjork-text-soft)]">
+                  Teknisi
+                </p>
+                <p className="mt-1 text-sm text-[color:var(--bjork-text)]">
+                  {order.technician?.full_name ?? "Belum ditugaskan"}
+                </p>
+              </div>
             </div>
 
             <div className="mt-5 space-y-4 border-t border-[color:var(--bjork-border)] pt-4">
@@ -223,6 +246,8 @@ export default async function OrderDetailPage({ params }: Context) {
           canDelete={can(session.permissions, "orders", "delete")}
           canCancel={session.role === "owner"}
           hasInvoice={Boolean(invoice)}
+          canAssign={canAssign}
+          technicians={technicians}
         />
       </div>
     </>

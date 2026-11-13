@@ -1,3 +1,5 @@
+import type { StaffRole } from "./types";
+
 /**
  * Izin staf per modul. Owner selalu penuh dan tidak memakai baris izin.
  * Modul "staf" sengaja tidak ada di daftar: hanya owner yang boleh membukanya.
@@ -38,7 +40,6 @@ export const MODULE_PATHS: Record<Module, string> = {
 };
 
 export type PermissionAction = "view" | "manage" | "delete";
-
 export type ModulePermission = {
   view: boolean;
   manage: boolean;
@@ -93,15 +94,15 @@ export const PRESETS: Record<
 > = {
   teknisi: {
     label: "Teknisi",
-    description: "Kerjakan order, pelanggan, perangkat, dan garansi.",
+    description:
+      "Kerjakan order yang ditugaskan; lihat pelanggan, perangkat, garansi, dan sparepart.",
     permissions: build({
       dashboard: {},
       orders: { manage: true },
-      customers: { manage: true },
-      devices: { manage: true },
-      warranties: { manage: true },
+      customers: {},
+      devices: {},
+      warranties: {},
       spareparts: {},
-      testimonials: {},
     }),
   },
   kasir: {
@@ -131,6 +132,13 @@ export const PRESETS: Record<
       testimonials: { manage: true },
     }),
   },
+};
+
+/** Preset izin yang dipakai saat akun dibuat atau role diganti. */
+export const ROLE_PRESETS: Record<StaffRole, PresetKey | null> = {
+  owner: null,
+  admin: "operasional",
+  teknisi: "teknisi",
 };
 
 export function rowsToPermissions(rows: PermissionRow[]): Permissions {

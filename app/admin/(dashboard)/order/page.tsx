@@ -1,5 +1,6 @@
 import { PageHeader } from "@/components/admin/ui";
 import { can } from "@/lib/admin/access";
+import { canCreateOrders } from "@/lib/admin/order-access";
 import { requireStaffPage } from "@/lib/admin/guard";
 import type { CustomerOption, Device, Order } from "@/lib/admin/types";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -18,7 +19,7 @@ export default async function OrdersPage() {
     supabase
       .from("service_orders")
       .select(
-        "*, customer:customers(full_name, phone), device:devices(device_type, brand, model)",
+        "*, customer:customers(full_name, phone), device:devices(device_type, brand, model), technician:profiles!assigned_technician_id(full_name)",
       )
       .order("created_at", { ascending: false })
       .limit(200),
@@ -46,8 +47,8 @@ export default async function OrdersPage() {
         orders={(ordersResult.data ?? []) as Order[]}
         customers={(customersResult.data ?? []) as CustomerOption[]}
         devices={(devicesResult.data ?? []) as Device[]}
-        canManage={can(session.permissions, "orders", "manage")}
         canDelete={can(session.permissions, "orders", "delete")}
+        canCreate={canCreateOrders(session.role)}
       />
     </>
   );

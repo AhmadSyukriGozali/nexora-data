@@ -4,6 +4,8 @@ import {
   type PermissionRow,
   type PresetKey,
 } from "@/lib/admin/access";
+import { logAudit } from "@/lib/admin/audit";
+import { permissionRowsForRole } from "@/lib/admin/permission-rows";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getStaffSession, ownerOnly } from "@/lib/supabase/auth";
 import { dbErrorResponse, jsonError, jsonOk, parseBody } from "@/lib/supabase/http";
@@ -103,8 +105,11 @@ export async function POST(request: Request) {
     }
   }
 
-  if (body.data.role === "admin") {
-    const rows = resolveRows(body.data);
+  if (body.data.role !== "owner") {
+    const rows =
+      body.data.role === "teknisi"
+        ? permissionRowsForRole("teknisi")
+        : resolveRows(body.data);
     const { error: permissionError } = await replaceStaffPermissions(
       admin,
       userId,
@@ -120,6 +125,13 @@ export async function POST(request: Request) {
       );
     }
   }
+
+  await logAudit({
+    action: "staff.create",
+    entity: "profiles",
+    entityId: userId,
+    metadata: { role: body.data.role },
+  });
 
   return jsonOk(
     {

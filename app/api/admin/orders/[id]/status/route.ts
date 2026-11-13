@@ -1,3 +1,4 @@
+import { canAccessOrder } from "@/lib/admin/order-access";
 import { canTransitionOrder } from "@/lib/admin/status-flow";
 import { getStaffSession, isOwner, requirePermission } from "@/lib/supabase/auth";
 import { dbErrorResponse, jsonError, jsonOk, parseBody } from "@/lib/supabase/http";
@@ -31,13 +32,15 @@ export async function POST(request: Request, context: Context) {
   const supabase = await createSupabaseServerClient();
   const { data: current, error: currentError } = await supabase
     .from("service_orders")
-    .select("status")
+    .select("status, assigned_technician_id")
     .eq("id", parsedId.data)
-    .maybeSingle<{ status: string }>();
+    .maybeSingle<{ status: string; assigned_technician_id: string | null }>();
 
   const currentMapped = dbErrorResponse(currentError);
   if (currentMapped) return currentMapped;
-  if (!current) return jsonError("Order tidak ditemukan", 404);
+  if (!current || !canAccessOrder(session.role, session.userId, current)) {
+    return jsonError("Order tidak ditemukan", 404);
+  }
 
   const from = current.status as Parameters<typeof canTransitionOrder>[0];
   const to = body.data.status;

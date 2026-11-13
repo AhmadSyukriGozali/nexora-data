@@ -1,4 +1,4 @@
-export type StaffRole = "owner" | "admin";
+export type StaffRole = "owner" | "admin" | "teknisi";
 
 export type DeviceType = "hp" | "laptop" | "pc" | "printer";
 
@@ -58,6 +58,7 @@ export type Order = {
   status: ServiceStatus;
   estimated_finish_at: string | null;
   total_amount: number;
+  assigned_technician_id: string | null;
   created_at: string;
   customer?: {
     full_name: string;
@@ -72,6 +73,7 @@ export type Order = {
     serial_number?: string | null;
     notes?: string | null;
   } | null;
+  technician?: { full_name: string } | null;
 };
 
 export type OrderHistory = {
