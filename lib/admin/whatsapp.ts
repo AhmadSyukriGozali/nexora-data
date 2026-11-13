@@ -1,4 +1,4 @@
-import { site } from "@/lib/site";
+import { site, trackingUrl } from "@/lib/site";
 
 import { serviceStatusLabels } from "./format";
 import type { Order, ServiceStatus } from "./types";
@@ -33,6 +33,7 @@ export function orderStatusMessage(order: Order): string {
     ? `${order.device.brand} ${order.device.model}`.trim()
     : "perangkat Anda";
   const name = order.customer?.full_name ?? "Bapak/Ibu";
+  const last4 = (order.customer?.phone ?? "").replace(/\D/g, "").slice(-4);
 
   return [
     `Halo ${name}, update servis ${device} Anda di ${site.name}.`,
@@ -42,7 +43,7 @@ export function orderStatusMessage(order: Order): string {
     "",
     STATUS_MESSAGES[order.status],
     "",
-    `Cek progres: ${site.url}/cek-status`,
+    `Cek progres: ${trackingUrl(order.ticket_number, last4)}`,
     "Balas pesan ini kalau ada pertanyaan.",
   ].join("\n");
 }

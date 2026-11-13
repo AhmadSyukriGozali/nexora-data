@@ -50,6 +50,8 @@ describe("orderStatusMessage", () => {
     expect(message).toContain("NXD-2611-001-K9M4");
     expect(message).toContain("Status: Selesai");
     expect(message).toContain(`${site.url}/cek-status`);
+    expect(message).toContain("kode=NXD-2611-001-K9M4");
+    expect(message).toContain("hp=6343");
   });
 });
 

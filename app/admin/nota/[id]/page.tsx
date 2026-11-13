@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import QRCode from "qrcode";
 
 import { buttonGhost } from "@/components/admin/form-controls";
 import {
@@ -9,7 +10,7 @@ import {
 } from "@/lib/admin/format";
 import { requireStaffPage } from "@/lib/admin/guard";
 import type { Order } from "@/lib/admin/types";
-import { site } from "@/lib/site";
+import { site, trackingUrl } from "@/lib/site";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 import { PrintButton } from "./print-button";
@@ -49,6 +50,11 @@ export default async function ReceiptPage({ params }: Context) {
 
   const order = data as Order;
   const equipment = order.equipment ?? [];
+  const last4 = (order.customer?.phone ?? "").replace(/\D/g, "").slice(-4);
+  const qrSvg = await QRCode.toString(
+    trackingUrl(order.ticket_number, last4),
+    { type: "svg", margin: 0, width: 200 },
+  );
 
   return (
     <div className="min-h-screen bg-paper py-6 print:min-h-0 print:bg-white print:py-0">
@@ -130,6 +136,15 @@ export default async function ReceiptPage({ params }: Context) {
             </p>
             <p className="mt-1">Pengambilan unit pada jam operasional.</p>
           </section>
+
+          <div className="mt-4 text-center">
+            <div
+              className="mx-auto size-[22mm] [&>svg]:size-full"
+              // SVG dibuat library dari data internal, bukan input pengguna.
+              dangerouslySetInnerHTML={{ __html: qrSvg }}
+            />
+            <p className="mt-1 text-[9px]">Scan untuk cek status servis</p>
+          </div>
 
           <div className="mt-5 grid grid-cols-2 gap-3 text-center">
             <div>

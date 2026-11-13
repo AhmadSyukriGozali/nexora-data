@@ -1,10 +1,13 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useCallback, useEffect, useState, type FormEvent } from "react";
 
 import { cn } from "@/lib/cn";
 import { waLink } from "@/lib/site";
-import { TICKET_NUMBER_PLACEHOLDER } from "@/lib/tickets/ticket-number";
+import {
+  TICKET_NUMBER_PLACEHOLDER,
+  isTicketNumber,
+} from "@/lib/tickets/ticket-number";
 
 type ServiceStatus =
   | "masuk"
@@ -101,6 +104,50 @@ function formatDateTime(value: string | null): string {
   return dateTime.format(date);
 }
 
+type CheckOutcome =
+  | { ok: true; data: StatusResult }
+  | { ok: false; message: string };
+
+async function fetchStatus(
+  ticketNumber: string,
+  phoneLast4Value: string,
+): Promise<CheckOutcome> {
+  try {
+    const response = await fetch("/api/public/service-status", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        ticket_number: ticketNumber.trim().toUpperCase(),
+        phone_last4: phoneLast4Value.trim(),
+      }),
+    });
+
+    const payload = (await response.json().catch(() => null)) as
+      | { data?: StatusResult; error?: { message?: string } }
+      | null;
+
+    if (!response.ok) {
+      return {
+        ok: false,
+        message:
+          payload?.error?.message ??
+          "Gagal mengecek status. Coba lagi beberapa saat.",
+      };
+    }
+
+    if (!payload?.data) {
+      return { ok: false, message: "Data status tidak lengkap. Coba lagi." };
+    }
+
+    return { ok: true, data: payload.data };
+  } catch {
+    return {
+      ok: false,
+      message: "Tidak bisa menghubungi server. Periksa koneksi internet.",
+    };
+  }
+}
+
 export function OrderStatusChecker() {
   const [ticket, setTicket] = useState("");
   const [phoneLast4, setPhoneLast4] = useState("");
@@ -109,46 +156,43 @@ export function OrderStatusChecker() {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setBusy(true);
-    setError(null);
-    setResult(null);
+  const runCheck = useCallback(
+    async (ticketValue: string, phoneLast4Value: string) => {
+      setBusy(true);
+      setError(null);
+      setResult(null);
 
-    try {
-      const response = await fetch("/api/public/service-status", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ticket_number: ticket.trim().toUpperCase(),
-          phone_last4: phoneLast4.trim(),
-        }),
-      });
-
-      const payload = (await response.json().catch(() => null)) as
-        | { data?: StatusResult; error?: { message?: string } }
-        | null;
-
-      if (!response.ok) {
-        setError(
-          payload?.error?.message ??
-            "Gagal mengecek status. Coba lagi beberapa saat.",
-        );
-        return;
-      }
-
-      if (!payload?.data) {
-        setError("Data status tidak lengkap. Coba lagi.");
-        return;
-      }
-
-      setResult(payload.data);
-      setCheckedAt(new Date().toISOString());
-    } catch {
-      setError("Tidak bisa menghubungi server. Periksa koneksi internet.");
-    } finally {
+      const outcome = await fetchStatus(ticketValue, phoneLast4Value);
       setBusy(false);
-    }
+
+      if (!outcome.ok) {
+        setError(outcome.message);
+        return;
+      }
+
+      setResult(outcome.data);
+      setCheckedAt(new Date().toISOString());
+    },
+    [],
+  );
+
+  // QR pada nota membawa kode servis + 4 digit HP: langsung tampilkan statusnya.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const kode = (params.get("kode") ?? "").trim().toUpperCase();
+    const hp = (params.get("hp") ?? "").trim();
+    if (!isTicketNumber(kode) || !/^\d{4}$/.test(hp)) return;
+
+    // Prefill dari query string hanya bisa dibaca setelah mount.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setTicket(kode);
+    setPhoneLast4(hp);
+    void runCheck(kode, hp);
+  }, [runCheck]);
+
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    void runCheck(ticket, phoneLast4);
   }
 
   const stepIndex = result ? currentStepIndex[result.status] : -1;
