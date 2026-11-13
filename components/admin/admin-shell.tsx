@@ -2,6 +2,7 @@
 
 import {
   Bell,
+  ClipboardList,
   FileText,
   LayoutDashboard,
   LogOut,
@@ -44,6 +45,7 @@ type NavItem = {
   icon: ComponentType<SVGProps<SVGSVGElement>>;
   module: Module | "staff";
   ownerOnly?: boolean;
+  ownerAdminOnly?: boolean;
   badge?: "orders" | "testimonials";
 };
 
@@ -54,6 +56,13 @@ const NAV: NavGroup[] = [
     items: [
       { href: "/admin", label: "Ringkasan", icon: LayoutDashboard, module: "dashboard" },
       { href: "/admin/order", label: "Order Servis", icon: Wrench, module: "orders", badge: "orders" },
+      {
+        href: "/admin/penerimaan",
+        label: "Penerimaan",
+        icon: ClipboardList,
+        module: "orders",
+        ownerAdminOnly: true,
+      },
       { href: "/admin/pelanggan", label: "Pelanggan", icon: Users, module: "customers" },
       { href: "/admin/perangkat", label: "Perangkat", icon: Smartphone, module: "devices" },
     ],
@@ -166,7 +175,9 @@ function SidebarContent({
     items: group.items.filter((item) =>
       item.ownerOnly
         ? isOwner
-        : item.module !== "staff" && permissions[item.module]?.view === true,
+        : item.ownerAdminOnly
+          ? user.role !== "teknisi"
+          : item.module !== "staff" && permissions[item.module]?.view === true,
     ),
   })).filter((group) => group.items.length > 0);
   const displayName = user.fullName || user.email || "Staf";
@@ -351,7 +362,9 @@ export function AdminShell({
   const visibleNav = NAV.flatMap((group) => group.items).filter((item) =>
     item.ownerOnly
       ? isOwner
-      : item.module !== "staff" && permissions[item.module]?.view === true,
+      : item.ownerAdminOnly
+        ? user.role !== "teknisi"
+        : item.module !== "staff" && permissions[item.module]?.view === true,
   );
   const currentLabel =
     visibleNav.find((item) => isActive(pathname, item.href))?.label ??

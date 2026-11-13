@@ -8,6 +8,7 @@ import {
   ServiceStatusBadge,
 } from "@/components/admin/ui";
 import { can } from "@/lib/admin/access";
+import { ATTACHMENT_BUCKET } from "@/lib/admin/attachments";
 import {
   deviceTypeLabels,
   formatDateTime,
@@ -15,9 +16,10 @@ import {
   serviceStatusLabels,
 } from "@/lib/admin/format";
 import { requireStaffPage } from "@/lib/admin/guard";
-import type { Order, OrderHistory } from "@/lib/admin/types";
+import type { Order, OrderAttachment, OrderHistory } from "@/lib/admin/types";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
+import { OrderAttachments } from "./order-attachments";
 import { OrderDetailManager } from "./order-detail-manager";
 
 export const instant = false;
@@ -65,6 +67,41 @@ export default async function OrderDetailPage({ params }: Context) {
   } | null;
 
   const canAssign = session.role !== "teknisi";
+  const canManageOrders = can(session.permissions, "orders", "manage");
+  const canUpload =
+    canManageOrders &&
+    (canAssign || order.assigned_technician_id === session.userId);
+  const equipment = order.equipment ?? [];
+
+  const attachmentsResult = await supabase
+    .from("service_attachments")
+    .select("*")
+    .eq("order_id", id)
+    .order("created_at", { ascending: true });
+
+  const attachmentRows = (attachmentsResult.data ?? []) as OrderAttachment[];
+  if (attachmentsResult.error) {
+    console.error("foto order gagal dimuat:", attachmentsResult.error);
+  }
+  const signedUrls = attachmentRows.length
+    ? await supabase.storage
+        .from(ATTACHMENT_BUCKET)
+        .createSignedUrls(
+          attachmentRows.map((row) => row.storage_path),
+          3600,
+        )
+    : null;
+  if (signedUrls?.error) {
+    console.error("signed URL foto gagal:", signedUrls.error);
+  }
+  const urlByPath = new Map(
+    (signedUrls?.data ?? []).map((entry) => [entry.path, entry.signedUrl]),
+  );
+  const attachments = attachmentRows.map((row) => ({
+    ...row,
+    url: urlByPath.get(row.storage_path) ?? null,
+  }));
+
   const technicians = canAssign
     ? ((
         await supabase
@@ -87,6 +124,9 @@ export default async function OrderDetailPage({ params }: Context) {
       >
         <Link href="/admin/order" className={buttonGhost}>
           Kembali
+        </Link>
+        <Link href={`/admin/nota/${order.id}`} className={buttonGhost}>
+          Cetak nota
         </Link>
         {invoice ? (
           <Link href={`/admin/invoice/${invoice.id}`} className={buttonPrimary}>
@@ -166,6 +206,23 @@ export default async function OrderDetailPage({ params }: Context) {
                   {order.technician?.full_name ?? "Belum ditugaskan"}
                 </p>
               </div>
+
+              {equipment.length > 0 ? (
+                <div className="sm:col-span-2">
+                  <p className="text-[10.5px] uppercase tracking-[0.14em] text-[color:var(--bjork-text-soft)]">
+                    Kelengkapan unit
+                  </p>
+                  <p className="mt-1 text-sm text-[color:var(--bjork-text)]">
+                    {equipment
+                      .map((item) => `${item.returned ? "✓" : "○"} ${item.label}`)
+                      .join(" · ")}
+                  </p>
+                  <p className="mt-0.5 text-[11px] text-[color:var(--bjork-text-muted)]">
+                    {equipment.filter((item) => item.returned).length}/
+                    {equipment.length} bawaan dikembalikan
+                  </p>
+                </div>
+              ) : null}
             </div>
 
             <div className="mt-5 space-y-4 border-t border-[color:var(--bjork-border)] pt-4">
@@ -197,6 +254,13 @@ export default async function OrderDetailPage({ params }: Context) {
               ) : null}
             </div>
           </Card>
+
+          <OrderAttachments
+            orderId={order.id}
+            attachments={attachments}
+            canUpload={canUpload}
+            canDelete={canManageOrders && canAssign}
+          />
 
           <Card>
             <h2 className="text-[13.5px] font-semibold">Riwayat status</h2>

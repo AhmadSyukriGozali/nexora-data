@@ -29,6 +29,15 @@ export async function POST(request: Request, context: Context) {
     return jsonError("Hanya owner yang boleh membatalkan order.", 403);
   }
 
+  if (body.data.status === "diambil") {
+    if (session.role === "teknisi") {
+      return jsonError("Hanya owner/admin yang boleh menyerahkan unit.", 403);
+    }
+    if (!body.data.warranty_days) {
+      return jsonError("Durasi garansi wajib diisi saat penyerahan.", 422);
+    }
+  }
+
   const supabase = await createSupabaseServerClient();
   const { data: current, error: currentError } = await supabase
     .from("service_orders")
@@ -55,6 +64,8 @@ export async function POST(request: Request, context: Context) {
     p_order_id: parsedId.data,
     p_new_status: body.data.status,
     p_note: body.data.note ?? null,
+    p_warranty_days: body.data.warranty_days ?? null,
+    p_warranty_terms: body.data.warranty_terms ?? null,
   });
 
   const mapped = dbErrorResponse(error);

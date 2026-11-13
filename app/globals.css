@@ -238,6 +238,12 @@ html.js [data-reveal].is-in {
   --blk-error-soft: rgba(248, 113, 113, 0.12);
 }
 
+/* Nota penerimaan dicetak di roll thermal 80 mm. */
+@page {
+  size: 80mm auto;
+  margin: 4mm;
+}
+
 .hide-scrollbar {
   scrollbar-width: none;
 }

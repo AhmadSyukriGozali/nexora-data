@@ -1,3 +1,6 @@
+import type { AttachmentKind } from "./attachments";
+import type { EquipmentItem } from "./equipment";
+
 export type StaffRole = "owner" | "admin" | "teknisi";
 
 export type DeviceType = "hp" | "laptop" | "pc" | "printer";
@@ -59,6 +62,7 @@ export type Order = {
   estimated_finish_at: string | null;
   total_amount: number;
   assigned_technician_id: string | null;
+  equipment: EquipmentItem[];
   created_at: string;
   customer?: {
     full_name: string;
@@ -74,6 +78,15 @@ export type Order = {
     notes?: string | null;
   } | null;
   technician?: { full_name: string } | null;
+};
+
+export type OrderAttachment = {
+  id: string;
+  order_id: string;
+  kind: AttachmentKind;
+  storage_path: string;
+  uploaded_by: string | null;
+  created_at: string;
 };
 
 export type OrderHistory = {

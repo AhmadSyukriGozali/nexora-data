@@ -48,6 +48,16 @@ export function waLink(message: string) {
   return `https://wa.me/${site.phone.intl}?text=${encodeURIComponent(message)}`;
 }
 
+/**
+ * Tautan halaman cek status. Empat digit HP ikut diisi supaya pelanggan yang
+ * memindai QR nota tidak perlu mengetik apa pun.
+ */
+export function trackingUrl(ticketNumber: string, phoneLast4?: string | null) {
+  const params = new URLSearchParams({ kode: ticketNumber });
+  if (phoneLast4) params.set("hp", phoneLast4);
+  return `${site.url}/cek-status?${params.toString()}`;
+}
+
 export const waDefault = waLink(
   "Halo Nexora Data, saya mau tanya soal servis perangkat saya.",
 );
