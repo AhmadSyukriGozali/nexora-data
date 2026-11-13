@@ -21,6 +21,7 @@ import {
   StatStrip,
 } from "@/components/admin/ui";
 import { apiRequest } from "@/lib/admin/client-api";
+import { equipmentFromFormData } from "@/lib/admin/equipment";
 import {
   emptyToNull,
   numberValue,
@@ -39,6 +40,8 @@ import type {
   Order,
   ServiceStatus,
 } from "@/lib/admin/types";
+
+import { EquipmentField } from "./equipment-field";
 
 const STATUSES = Object.keys(serviceStatusLabels) as ServiceStatus[];
 
@@ -113,6 +116,10 @@ export function OrderManager({
         textValue(form.get("estimated_finish_at")),
       ),
       total_amount: numberValue(form.get("total_amount"), 0),
+      equipment: equipmentFromFormData(
+        (name) => form.get(name),
+        (name) => form.getAll(name),
+      ),
     };
 
     const result = await apiRequest<Order>("/api/admin/orders", {
@@ -314,6 +321,8 @@ export function OrderManager({
                   placeholder="Contoh: layar berkedip dan baterai cepat habis."
                 />
               </Field>
+
+              <EquipmentField initial={[]} />
 
               <Field label="Diagnosa awal (opsional)">
                 <textarea
